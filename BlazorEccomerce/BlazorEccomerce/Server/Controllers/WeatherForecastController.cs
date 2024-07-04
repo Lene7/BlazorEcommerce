@@ -1,4 +1,3 @@
-using BlazorEccomerce.Shared;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlazorEccomerce.Server.Controllers

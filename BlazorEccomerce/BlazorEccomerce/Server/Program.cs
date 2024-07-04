@@ -1,3 +1,4 @@
+global using BlazorEccomerce.Shared;
 using Microsoft.AspNetCore.ResponseCompression;
 
 var builder = WebApplication.CreateBuilder(args);
