@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorEccomerce.Server", "BlazorEccomerce\Server\BlazorEccomerce.Server.csproj", "{529EA5CC-E29D-4841-AF5D-D0C0A2BB4E93}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorEccomerce.Server", "BlazorEccomerce\Server\BlazorEccomerce.Server.csproj", "{529EA5CC-E29D-4841-AF5D-D0C0A2BB4E93}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorEccomerce.Client", "BlazorEccomerce\Client\BlazorEccomerce.Client.csproj", "{3F6EA6AF-6973-4646-8894-A9D12B6BAEC2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorEccomerce.Client", "BlazorEccomerce\Client\BlazorEccomerce.Client.csproj", "{3F6EA6AF-6973-4646-8894-A9D12B6BAEC2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorEccomerce.Shared", "BlazorEccomerce\Shared\BlazorEccomerce.Shared.csproj", "{B352A37C-CAE9-4967-B60A-41D52C605B13}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorEccomerce.Shared", "BlazorEccomerce\Shared\BlazorEccomerce.Shared.csproj", "{B352A37C-CAE9-4967-B60A-41D52C605B13}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
