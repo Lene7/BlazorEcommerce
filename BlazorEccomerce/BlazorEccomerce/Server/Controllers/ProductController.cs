@@ -1,10 +1,8 @@
-﻿using BlazorEccomerce.Server.Data;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace BlazorEccomerce.Server.Controllers
 {
-	[Route("api/[controller]")]
+    [Route("api/[controller]")]
 	[ApiController]
 	public class ProductController : ControllerBase
 	{
@@ -28,5 +26,12 @@ namespace BlazorEccomerce.Server.Controllers
 			var result = await _productService.GetProductAsync(productId);
 			return Ok(result);
 		}
-	}
+
+		[HttpGet("category/{category}")]
+        public async Task<ActionResult<ServiceResponse<List<Product>>>> GetProductsByCategory(string categoryUrl)
+        {
+            var result = await _productService.GetProductsByCategory(categoryUrl);
+            return Ok(result);
+        }
+    }
 }
