@@ -8,10 +8,10 @@
 
 @code {
 	[Parameter]
-	public string? CategoryUrl { get; set; } = null;
+	public string? categoryUrl { get; set; } = null;
 
 	protected override async Task OnParametersSetAsync()
 	{
-		await ProductService.GetProducts(CategoryUrl);
+		await ProductService.GetProducts(categoryUrl);
 	}
 }
