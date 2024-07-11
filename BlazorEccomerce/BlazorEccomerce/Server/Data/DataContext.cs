@@ -59,7 +59,8 @@
 						Title = "Couples Photoshoot",
 						Description = "Two (2) hours photoshoot. This include between 100 to 150 edited photos. This can be for special occasions, social media, or just for the love you share!",
 						ImageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsNk9UUKvmqxEh2t17_5jCYBWO4e4mWK2sfw&s",
-						CategoryId = 2
+						CategoryId = 2,
+						Featured = true
 					},
 
 					new Product

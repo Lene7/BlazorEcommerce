@@ -5,7 +5,14 @@
 
 <PageTitle>KLS MEDIA</PageTitle>
 
-<ProductList />
+@if (searchText == null && categoryUrl == null)
+{
+	<FeaturedProducts />
+}
+else 
+{
+	<ProductList />
+}
 
 @code {
 	[Parameter]
