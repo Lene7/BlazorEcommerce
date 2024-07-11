@@ -2,7 +2,7 @@
 
 namespace BlazorEccomerce.Server.Controllers
 {
-    [Route("api/[controller]")]
+	[Route("api/[controller]")]
 	[ApiController]
 	public class ProductController : ControllerBase
 	{
@@ -28,10 +28,24 @@ namespace BlazorEccomerce.Server.Controllers
 		}
 
 		[HttpGet("category/{categoryUrl}")]
-        public async Task<ActionResult<ServiceResponse<List<Product>>>> GetProductsByCategory(string categoryUrl)
-        {
-            var result = await _productService.GetProductsByCategory(categoryUrl);
-            return Ok(result);
-        }
-    }
+		public async Task<ActionResult<ServiceResponse<List<Product>>>> GetProductsByCategory(string categoryUrl)
+		{
+			var result = await _productService.GetProductsByCategory(categoryUrl);
+			return Ok(result);
+		}
+
+		[HttpGet("search/{searchText}")]
+		public async Task<ActionResult<ServiceResponse<List<Product>>>> SearchProducts(string searchText)
+		{
+			var result = await _productService.SearchProducts(searchText);
+			return Ok(result);
+		}
+
+		[HttpGet("searchsuggestions/{searchText}")]
+		public async Task<ActionResult<ServiceResponse<List<Product>>>> GetProductSearchSuggestions(string searchText)
+		{
+			var result = await _productService.GetProductSearchSuggestions(searchText);
+			return Ok(result);
+		}
+	}
 }
