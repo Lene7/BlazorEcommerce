@@ -38,7 +38,7 @@ else
 		ProductService.ProductsChanged += StateHasChanged;
 	}
 
-	public void Dispose()
+	public void OnInitialized()
 	{
 		ProductService.ProductsChanged -= StateHasChanged;
 	}

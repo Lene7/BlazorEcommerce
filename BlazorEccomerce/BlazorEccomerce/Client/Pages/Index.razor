@@ -3,15 +3,15 @@
 @page "/{categoryUrl}"
 @inject IProductService ProductService
 
-<PageTitle>KLS MEDIA</PageTitle>
+<PageTitle>My Shop</PageTitle>
 
 @if (searchText == null && categoryUrl == null)
 {
-	<FeaturedProducts />
+	@FeaturedProducts
 }
-else 
+else
 {
-	<ProductList />
+	@ProductList
 }
 
 @code {
