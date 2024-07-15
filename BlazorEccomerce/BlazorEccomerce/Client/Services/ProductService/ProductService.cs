@@ -43,14 +43,14 @@ namespace BlazorEccomerce.Client.Services.ProductService
 
 		public async Task<List<string>> GetProductSearchSuggestions(string searchText)
 		{
-			var result = await _http.GetFromJsonAsync<ServiceResponse<List<string>>>($"api/product/searchsuggestions/{searchText}");
+			var result = await _http.GetFromJsonAsync<ServiceResponse<List<string>>>($"api/Product/searchsuggestions/{searchText}");
 			return result.Data;
 		}
 
 		public async Task SearchProducts(string searchText, int page)
 		{
 			LastSearchText = searchText;
-			var result = await _http.GetFromJsonAsync<ServiceResponse<ProductSearchResultDTO>>($"api/product/search/{searchText}/{page}");
+			var result = await _http.GetFromJsonAsync<ServiceResponse<ProductSearchResultDTO>>($"api/Product/search/{searchText}/{page}");
 
 			if (result != null && result.Data != null)
 			{

@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Pages\FeaturedProducts.razor" />
     <Content Remove="Shared\FeaturedProducts.razor" />
   </ItemGroup>
 
@@ -24,11 +25,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <_ContentIncludedByDefault Remove="Pages\FeaturedProducts.razor" />
     <_ContentIncludedByDefault Remove="Shared\FeaturedProducts.razor" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Pages\FeaturedProducts.razor" />
     <None Include="Shared\FeaturedProducts.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\FeaturedProducts.razor" />
   </ItemGroup>
 
 </Project>
