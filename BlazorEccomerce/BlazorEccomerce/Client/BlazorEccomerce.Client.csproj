@@ -7,35 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="Pages\FeaturedProducts.razor" />
-    <Content Remove="Shared\FeaturedProducts.razor" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.31" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.31" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Shared\BlazorEccomerce.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Shared\FeaturedProducts.razor" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <_ContentIncludedByDefault Remove="Pages\FeaturedProducts.razor" />
-    <_ContentIncludedByDefault Remove="Shared\FeaturedProducts.razor" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Pages\FeaturedProducts.razor" />
-    <None Include="Shared\FeaturedProducts.razor" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Pages\FeaturedProducts.razor" />
   </ItemGroup>
 
 </Project>
