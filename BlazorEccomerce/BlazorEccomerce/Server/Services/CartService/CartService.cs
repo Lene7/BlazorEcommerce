@@ -46,7 +46,8 @@ namespace BlazorEccomerce.Server.Services.CartService
 					ImageUrl = product.ImageUrl,
 					Price = productVariant.Price,
 					ProductType = productVariant.ProductType.Name,
-					ProductTypeId = productVariant.ProductTypeId
+					ProductTypeId = productVariant.ProductTypeId,
+					Quantity = item.Quantity
 				};
 
 				result.Data.Add(cartProduct);
