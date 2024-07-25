@@ -16,4 +16,12 @@
     <ProjectReference Include="..\Shared\BlazorEccomerce.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Register.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Pages\Register.razor" />
+  </ItemGroup>
+
 </Project>
