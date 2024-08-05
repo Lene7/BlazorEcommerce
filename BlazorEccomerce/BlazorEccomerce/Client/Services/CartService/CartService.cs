@@ -1,99 +1,133 @@
 ﻿
 using BlazorEccomerce.Shared;
 using Blazored.LocalStorage;
+using System.Security.Claims;
 
 namespace BlazorEccomerce.Client.Services.CartService
 {
 	public class CartService : ICartService
 	{
-		private readonly ILocalStorageService _localStorage;
 		private readonly HttpClient _http;
+		private readonly AuthenticationStateProvider _authStateProvider;
 
-		public CartService(ILocalStorageService logolStorage, HttpClient http)
+		public CartService(HttpClient http, AuthenticationStateProvider authStateProvider)
 		{
-			_localStorage = logolStorage;
 			_http = http;
+			_authStateProvider = authStateProvider;
 		}
 		
 		public event Action OnChange;
 
-		public async Task AddToCart(CartItem cartItem)
+		public async Task AddToCart(CartItemDTO cartItem)
 		{
-			var cart = await _localStorage.GetItemAsync<List<CartItem>>("cart");
-			if (cart == null)
+			try
 			{
-				cart = new List<CartItem>();
-			}
-			
-			var sameItem = cart.Find(x => x.ProductId == cartItem.ProductId
-				&& x.ProductTypeId == cartItem.ProductTypeId);
-			if (sameItem == null)
-			{
-				cart.Add(cartItem);
-			}
-            else
-            {
-				sameItem.Quantity += cartItem.Quantity;
-            }
+				var authState = await _authStateProvider.GetAuthenticationStateAsync();
+				var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-            await _localStorage.SetItemAsync("cart", cart);
-			OnChange.Invoke();
+				if (string.IsNullOrEmpty(userId))
+				{
+					throw new Exception("User not authenticated");
+				}
+
+				var response = await _http.PostAsJsonAsync($"api/cart/add/{userId}", cartItem);
+				response.EnsureSuccessStatusCode();
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine($"Error adding item to cart: {ex.Message}");
+			}
 		}
 
-		public async Task<List<CartItem>> GetCartItems()
+		public async Task<List<CartItemDTO>> GetCartItems()
 		{
-			var cart = await _localStorage.GetItemAsync<List<CartItem>>("cart");
-			if (cart == null)
+			try
 			{
-				cart = new List<CartItem>();
-			}
+				var authState = await _authStateProvider.GetAuthenticationStateAsync();
+				var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-			return cart;
+				if (string.IsNullOrEmpty(userId))
+				{
+					throw new Exception("User not authenticated");
+				}
+
+				var response = await _http.GetAsync($"api/cart/items/{userId}");
+				response.EnsureSuccessStatusCode();
+
+				var result = await response.Content.ReadFromJsonAsync<ServiceResponse<List<CartItemDTO>>>();
+				return result.Data;
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine($"Error fetching cart items: {ex.Message}");
+				return new List<CartItemDTO>();
+			}
 		}
 
 		public async Task<List<CartProductResponseDTO>> GetCartProducts()
 		{
-			var cartItems = await _localStorage.GetItemAsync<List<CartItem>>("cart");
-			var response = await _http.PostAsJsonAsync("api/cart/products", cartItems);
-			var cartProducts =
-				await response.Content.ReadFromJsonAsync<ServiceResponse<List<CartProductResponseDTO>>>();
-			return cartProducts.Data;
+			try
+			{
+				var authState = await _authStateProvider.GetAuthenticationStateAsync();
+				var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+				if (string.IsNullOrEmpty(userId))
+				{
+					throw new Exception("User not authenticated");
+				}
+
+				var response = await _http.GetAsync($"api/cart/products/{userId}");
+				response.EnsureSuccessStatusCode();
+
+				var result = await response.Content.ReadFromJsonAsync<ServiceResponse<List<CartProductResponseDTO>>>();
+				return result.Data;
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine($"Error fetching cart products: {ex.Message}");
+				return new List<CartProductResponseDTO>();
+			}
 		}
 
 		public async Task RemoveProductFromCart(int productId, int productTypeId)
 		{
-			var cart = await _localStorage.GetItemAsync<List<CartItem>>("cart");
-			if (cart == null)
+			try
 			{
-				return;
+				var authState = await _authStateProvider.GetAuthenticationStateAsync();
+				var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+				if (string.IsNullOrEmpty(userId))
+				{
+					throw new Exception("User not authenticated");
+				}
+
+				var response = await _http.DeleteAsync($"api/cart/remove/{userId}/{productId}/{productTypeId}");
+				response.EnsureSuccessStatusCode();
 			}
-
-			var cartItem = cart.Find(x => x.ProductId == productId
-				&& x.ProductTypeId == productTypeId);
-
-			if (cartItem != null)
+			catch (Exception ex)
 			{
-				cart.Remove(cartItem);
-				await _localStorage.SetItemAsync("cart", cart);
-				OnChange.Invoke();
+				Console.Error.WriteLine($"Error removing item from cart: {ex.Message}");
 			}
 		}
 
-		public async Task UpdateQuantity(CartProductResponseDTO product)
+		public async Task UpdateQuantity(CartItemDTO cartItem)
 		{
-			var cart = await _localStorage.GetItemAsync<List<CartItem>>("cart");
-			if (cart == null)
+			try
 			{
-				return;
+				var authState = await _authStateProvider.GetAuthenticationStateAsync();
+				var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+				if (string.IsNullOrEmpty(userId))
+				{
+					throw new Exception("User not authenticated");
+				}
+
+				var response = await _http.PutAsJsonAsync($"api/cart/update/{userId}", cartItem);
+				response.EnsureSuccessStatusCode();
 			}
-
-			var cartItem = cart.Find(x => x.ProductId == product.ProductId
-				&& x.ProductTypeId == product.ProductTypeId);
-
-			if (cartItem != null)
+			catch (Exception ex)
 			{
-				cartItem.Quantity = product.Quantity;
-				await _localStorage.SetItemAsync("cart", cart);
+				Console.Error.WriteLine($"Error updating item quantity: {ex.Message}");
 			}
 		}
 	}

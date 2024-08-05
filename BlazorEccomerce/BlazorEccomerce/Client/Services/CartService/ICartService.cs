@@ -3,10 +3,10 @@
 	public interface ICartService
 	{
 		event Action OnChange;
-		Task AddToCart(CartItem cartItem);
-		Task<List<CartItem>> GetCartItems();
+		Task AddToCart(CartItemDTO cartItem);
+		Task<List<CartItemDTO>> GetCartItems();
 		Task<List<CartProductResponseDTO>> GetCartProducts();
 		Task RemoveProductFromCart(int productId, int productTypeId);
-		Task UpdateQuantity(CartProductResponseDTO product);
+		Task UpdateQuantity(CartItemDTO cartItem);
 	}
 }

@@ -131,6 +131,26 @@
 						OriginalPrice = 5000.00m
 					}
 				);
+
+			modelBuilder.Entity<User>()
+			   .HasOne(u => u.Cart)
+			   .WithOne(c => c.User)
+			   .HasForeignKey<Cart>(c => c.UserId);
+
+			modelBuilder.Entity<Cart>()
+				.HasMany(c => c.CartItems)
+				.WithOne(ci => ci.Cart)
+				.HasForeignKey(ci => ci.CartId);
+
+			modelBuilder.Entity<CartItem>()
+				.HasOne(ci => ci.Product)
+				.WithMany()
+				.HasForeignKey(ci => ci.ProductId);
+
+			modelBuilder.Entity<CartItem>()
+				.HasOne(ci => ci.ProductType)
+				.WithMany()
+				.HasForeignKey(ci => ci.ProductTypeId);
 		}
 
 		public DbSet<Product> Products { get; set; }
@@ -138,5 +158,7 @@
 		public DbSet<ProductType> ProductTypes { get; set; }
 		public DbSet<ProductVariant> ProductVariants { get; set; }
 		public DbSet<User> Users { get; set; }
+		public DbSet<Cart> Carts { get; set; }
+		public DbSet<CartItem> CartItems { get; set; }
 	}
 }
