@@ -30,19 +30,16 @@ namespace BlazorEccomerce.Client.Services.CartService
 					throw new Exception("User not authenticated");
 				}
 
-				// Fetch current cart items
 				var currentItems = await GetCartItems();
 				var existingItem = currentItems.FirstOrDefault(item => item.ProductVariantId == cartItem.ProductVariantId);
 
 				if (existingItem != null)
 				{
-					// Update quantity if item already exists
 					existingItem.Quantity += cartItem.Quantity;
 					await UpdateCartForUserAsync(int.Parse(userId), currentItems);
 				}
 				else
 				{
-					// Add new item if it does not exist
 					var response = await _http.PostAsJsonAsync($"api/cart/add/{userId}", cartItem);
 					response.EnsureSuccessStatusCode();
 				}
@@ -94,7 +91,7 @@ namespace BlazorEccomerce.Client.Services.CartService
 				response.EnsureSuccessStatusCode();
 
 				var result = await response.Content.ReadFromJsonAsync<ServiceResponse<List<CartProductResponseDTO>>>();
-				return result.Data;
+				return result?.Data ?? new List<CartProductResponseDTO>();
 			}
 			catch (Exception ex)
 			{
@@ -103,7 +100,7 @@ namespace BlazorEccomerce.Client.Services.CartService
 			}
 		}
 
-		public async Task RemoveProductFromCart(int productId, int productTypeId)
+		public async Task RemoveProductFromCart(int cartItemId)
 		{
 			try
 			{
@@ -115,7 +112,7 @@ namespace BlazorEccomerce.Client.Services.CartService
 					throw new Exception("User not authenticated");
 				}
 
-				var response = await _http.DeleteAsync($"api/cart/remove/{userId}/{productId}/{productTypeId}");
+				var response = await _http.DeleteAsync($"api/cart/delete/{userId}/{cartItemId}");
 				response.EnsureSuccessStatusCode();
 			}
 			catch (Exception ex)
@@ -134,27 +131,6 @@ namespace BlazorEccomerce.Client.Services.CartService
 			catch (Exception ex)
 			{
 				Console.Error.WriteLine($"Error updating cart: {ex.Message}");
-			}
-		}
-
-        public async Task UpdateQuantity(List<CartItemDTO> cartItem)
-        {
-			try
-			{
-				var authState = await _authStateProvider.GetAuthenticationStateAsync();
-				var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-
-				if (string.IsNullOrEmpty(userId))
-				{
-					throw new Exception("User not authenticated");
-				}
-
-				var response = await _http.PutAsJsonAsync($"api/cart/update/{userId}", cartItem); // Use cartItem here
-				response.EnsureSuccessStatusCode();
-			}
-			catch (Exception ex)
-			{
-				Console.Error.WriteLine($"Error updating item quantity: {ex.Message}");
 			}
 		}
     }

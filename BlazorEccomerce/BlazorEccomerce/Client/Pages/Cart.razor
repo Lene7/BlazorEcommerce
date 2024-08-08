@@ -27,7 +27,7 @@ else
 						@onchange="@((ChangeEventArgs e) => UpdateQuantity(e, product))"
 						class="form-control input-quantity"
 						min="1"/>
-					<button class="btn-delete" @onclick="@(() => RemoveProductFromCart(product.ProductId, product.ProductTypeId))">Delete</button>
+					<button class="btn-delete" @onclick="@(() => RemoveProductFromCart(product.ProductId))">Delete</button>
 				</div>
 				<div class="cart-product-price">R @(product.Price * product.Quantity)</div>
 			</div>
@@ -47,9 +47,9 @@ else
 		await LoadCart();
 	}
 
-	private async Task RemoveProductFromCart(int productId, int productTypeId)
+	private async Task RemoveProductFromCart(int cartItemId)
 	{
-		await CartService.RemoveProductFromCart(productId, productTypeId);
+		await CartService.RemoveProductFromCart(cartItemId);
 		await LoadCart();
 	}
 
@@ -92,7 +92,20 @@ else
 				Price = product.Price
 			};
 
-		await CartService.UpdateQuantity(new List<CartItemDTO> { cartItemDTO });
+		var currentItems = await CartService.GetCartItems();
+
+		var existingItem = currentItems.FirstOrDefault(item => item.ProductVariantId == cartItemDTO.ProductVariantId);
+
+		if (existingItem != null)
+		{
+			existingItem.Quantity = cartItemDTO.Quantity;
+		}
+		else
+		{
+			currentItems.Add(cartItemDTO);
+		}
+
+		await CartService.UpdateCartForUserAsync(int.Parse(userId), currentItems);
 		await LoadCart();
 	}
 }

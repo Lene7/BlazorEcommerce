@@ -20,29 +20,44 @@ namespace BlazorEccomerce.Server.Controllers
 		}
 
 		[HttpPost("add/{userId}")]
-        public async Task<IActionResult> AddToCart(int userId, [FromBody] CartItemDTO cartItemDTO)
-        {
-            var cartIdResponse = await _cartService.GetCartIdForUserAsync(userId);
-            if (!cartIdResponse.Success)
-            {
-                return BadRequest(cartIdResponse.Message);
-            }
+		public async Task<IActionResult> AddToCart(int userId, [FromBody] CartItemDTO cartItemDTO)
+		{
+			var cartIdResponse = await _cartService.GetCartIdForUserAsync(userId);
+			if (!cartIdResponse.Success)
+			{
+				return BadRequest(cartIdResponse.Message);
+			}
 
-            var cartItem = new CartItem
-            {
-                CartId = cartIdResponse.Data,
-                ProductVariantId = cartItemDTO.ProductVariantId,
-                Quantity = cartItemDTO.Quantity,
-                Price = cartItemDTO.Price
-            };
+			var cartId = cartIdResponse.Data;
 
-            _context.CartItems.Add(cartItem);
-            await _context.SaveChangesAsync();
+			var existingItem = await _context.CartItems
+				.FirstOrDefaultAsync(ci => ci.CartId == cartId && ci.ProductVariantId == cartItemDTO.ProductVariantId);
 
-            return Ok();
-        }
+			if (existingItem != null)
+			{
+				existingItem.Quantity += cartItemDTO.Quantity;
+				existingItem.Price = cartItemDTO.Price;
+				_context.Entry(existingItem).State = EntityState.Modified;
+			}
+			else
+			{
+				var cartItem = new CartItem
+				{
+					CartId = cartId,
+					ProductVariantId = cartItemDTO.ProductVariantId,
+					Quantity = cartItemDTO.Quantity,
+					Price = cartItemDTO.Price
+				};
 
-        [HttpGet("items/{userId}")]
+				_context.CartItems.Add(cartItem);
+			}
+
+			await _context.SaveChangesAsync();
+
+			return Ok();
+		}
+
+		[HttpGet("items/{userId}")]
         public async Task<ActionResult<ServiceResponse<List<CartItemDTO>>>> GetCartItems(int userId)
         {
             var result = await _cartService.GetCartIdForUserAsync(userId);
@@ -102,42 +117,45 @@ namespace BlazorEccomerce.Server.Controllers
         }
 
 		[HttpPut("update/{userId}")]
-		public async Task<ActionResult<ServiceResponse<bool>>> UpdateUserCart(int userId, [FromBody] List<CartItemDTO> cartItemsDTO)
+		public async Task<IActionResult> UpdateCartForUserAsync(int userId, [FromBody] List<CartItemDTO> cartItemsDTO)
 		{
-			if (userId <= 0)
+			try
 			{
-				return BadRequest("Invalid user ID");
+				var result = await _cartService.UpdateCartForUserAsync(userId, cartItemsDTO);
+				if (result.Data)
+				{
+					return Ok();
+				}
+				else
+				{
+					return BadRequest("Failed to update cart.");
+				}
 			}
-
-			if (cartItemsDTO == null || !cartItemsDTO.Any())
+			catch (Exception ex)
 			{
-				return BadRequest("Cart items are required.");
+				return StatusCode(500, $"Internal server error: {ex.Message}");
 			}
-
-			var result = await _cartService.UpdateCartForUserAsync(userId, cartItemsDTO);
-			if (!result.Success)
-			{
-				return BadRequest(result.Message);
-			}
-
-			return Ok(result);
 		}
 
-		[HttpDelete("remove/{userId}/{productId}/{productTypeId}")]
-        public async Task<IActionResult> RemoveProductFromCart(int userId, int productVariantId)
-        {
-            if (userId <= 0)
-            {
-                return BadRequest("Invalid user ID");
-            }
-
-            var result = await _cartService.RemoveProductFromCartAsync(userId, productVariantId);
-            if (!result.Success)
-            {
-                return BadRequest(result.Message);
-            }
-
-            return Ok();
-        }
-    }
+		[HttpDelete("delete/{userId}/{cartItemId}")]
+		public async Task<IActionResult> DeleteCartItemAsync(int userId, int cartItemId)
+		{
+			try
+			{
+				var result = await _cartService.RemoveProductFromCartAsync(userId, cartItemId); // Pass userId
+				if (result.Data)
+				{
+					return Ok();
+				}
+				else
+				{
+					return NotFound("Cart item not found or could not be deleted.");
+				}
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, $"Internal server error: {ex.Message}");
+			}
+		}
+	}
 }

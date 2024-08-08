@@ -7,6 +7,6 @@
 		Task<ServiceResponse<bool>> UpdateCartForUserAsync(int userId, List<BlazorEccomerce.Shared.CartItemDTO> cartItemsDTO);
 		Task<ServiceResponse<bool>> AddToCartAsync(int userId, CartItemDTO cartItemDTO);
 		Task<ServiceResponse<int>> GetCartIdForUserAsync(int userId);
-		Task<ServiceResponse<bool>> RemoveProductFromCartAsync(int userId, int productVariantId);
+		Task<ServiceResponse<bool>> RemoveProductFromCartAsync(int userId, int cartItemId);
 	}
 }
