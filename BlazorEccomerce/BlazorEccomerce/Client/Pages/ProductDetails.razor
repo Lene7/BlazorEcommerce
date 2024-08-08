@@ -81,14 +81,16 @@ else
 	private async Task AddToCart()
 	{
 		var productVariant = GetSelectedVariant();
-		var cartItemDTO = new CartItemDTO
-			{
-				ProductId = productVariant.ProductId,
-				ProductTypeId = productVariant.ProductTypeId,
-				Quantity = 1, 
-				Price = productVariant.Price 
-			};
+		if (productVariant != null)
+		{
+			var cartItemDTO = new CartItemDTO
+				{
+					ProductVariantId = productVariant.ProductId, 
+					Quantity = 1,
+					Price = productVariant.Price
+				};
 
-		await CartService.AddToCart(cartItemDTO);
+			await CartService.AddToCart(cartItemDTO);
+		}
 	}
 }

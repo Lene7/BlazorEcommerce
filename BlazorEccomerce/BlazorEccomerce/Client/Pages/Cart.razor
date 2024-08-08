@@ -1,5 +1,7 @@
 ﻿@page "/cart"
 @inject ICartService CartService
+@inject AuthenticationStateProvider _authStateProvider
+@using System.Security.Claims
 
 <PageTitle>Shopping Cart</PageTitle>
 
@@ -71,19 +73,26 @@ else
 
 	private async Task UpdateQuantity(ChangeEventArgs e, CartProductResponseDTO product)
 	{
+		var authState = await _authStateProvider.GetAuthenticationStateAsync();
+		var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+		if (string.IsNullOrEmpty(userId))
+		{
+			throw new Exception("User not authenticated");
+		}
+
 		product.Quantity = int.Parse(e.Value.ToString());
 		if (product.Quantity < 1)
 			product.Quantity = 1;
 
 		var cartItemDTO = new CartItemDTO
 			{
-				ProductId = product.ProductId,
-				ProductTypeId = product.ProductTypeId,
+				ProductVariantId = product.ProductVariantId,
 				Quantity = product.Quantity,
-				Price = product.Price 
+				Price = product.Price
 			};
 
-		await CartService.UpdateQuantity(cartItemDTO);
+		await CartService.UpdateQuantity(new List<CartItemDTO> { cartItemDTO });
 		await LoadCart();
 	}
 }

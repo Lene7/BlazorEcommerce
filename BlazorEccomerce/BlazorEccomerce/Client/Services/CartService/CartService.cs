@@ -30,8 +30,22 @@ namespace BlazorEccomerce.Client.Services.CartService
 					throw new Exception("User not authenticated");
 				}
 
-				var response = await _http.PostAsJsonAsync($"api/cart/add/{userId}", cartItem);
-				response.EnsureSuccessStatusCode();
+				// Fetch current cart items
+				var currentItems = await GetCartItems();
+				var existingItem = currentItems.FirstOrDefault(item => item.ProductVariantId == cartItem.ProductVariantId);
+
+				if (existingItem != null)
+				{
+					// Update quantity if item already exists
+					existingItem.Quantity += cartItem.Quantity;
+					await UpdateCartForUserAsync(int.Parse(userId), currentItems);
+				}
+				else
+				{
+					// Add new item if it does not exist
+					var response = await _http.PostAsJsonAsync($"api/cart/add/{userId}", cartItem);
+					response.EnsureSuccessStatusCode();
+				}
 			}
 			catch (Exception ex)
 			{
@@ -110,8 +124,21 @@ namespace BlazorEccomerce.Client.Services.CartService
 			}
 		}
 
-		public async Task UpdateQuantity(CartItemDTO cartItem)
+		public async Task UpdateCartForUserAsync(int userId, List<CartItemDTO> cartItemsDTO)
 		{
+			try
+			{
+				var response = await _http.PutAsJsonAsync($"api/cart/update/{userId}", cartItemsDTO);
+				response.EnsureSuccessStatusCode();
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine($"Error updating cart: {ex.Message}");
+			}
+		}
+
+        public async Task UpdateQuantity(List<CartItemDTO> cartItem)
+        {
 			try
 			{
 				var authState = await _authStateProvider.GetAuthenticationStateAsync();
@@ -122,7 +149,7 @@ namespace BlazorEccomerce.Client.Services.CartService
 					throw new Exception("User not authenticated");
 				}
 
-				var response = await _http.PutAsJsonAsync($"api/cart/update/{userId}", cartItem);
+				var response = await _http.PutAsJsonAsync($"api/cart/update/{userId}", cartItem); // Use cartItem here
 				response.EnsureSuccessStatusCode();
 			}
 			catch (Exception ex)
@@ -130,5 +157,5 @@ namespace BlazorEccomerce.Client.Services.CartService
 				Console.Error.WriteLine($"Error updating item quantity: {ex.Message}");
 			}
 		}
-	}
+    }
 }

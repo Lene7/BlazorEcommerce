@@ -4,6 +4,7 @@ using BlazorEccomerce.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlazorEccomerce.Server.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240808120358_fixcart")]
+    partial class fixcart
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,10 +54,16 @@ namespace BlazorEccomerce.Server.Migrations
                     b.Property<int>("CartId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("DateAdded")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("ProductVariantId")
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductTypeId")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
@@ -65,7 +73,9 @@ namespace BlazorEccomerce.Server.Migrations
 
                     b.HasIndex("CartId");
 
-                    b.HasIndex("ProductVariantId");
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ProductTypeId");
 
                     b.ToTable("CartItems");
                 });
@@ -219,11 +229,11 @@ namespace BlazorEccomerce.Server.Migrations
 
             modelBuilder.Entity("BlazorEccomerce.Shared.ProductVariant", b =>
                 {
-                    b.Property<int>("ProductVariantId")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductVariantId"), 1L, 1);
+                    b.Property<int>("ProductTypeId")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("OriginalPrice")
                         .HasColumnType("decimal(18,2)");
@@ -231,15 +241,7 @@ namespace BlazorEccomerce.Server.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductTypeId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ProductVariantId");
-
-                    b.HasIndex("ProductId");
+                    b.HasKey("ProductId", "ProductTypeId");
 
                     b.HasIndex("ProductTypeId");
 
@@ -248,67 +250,59 @@ namespace BlazorEccomerce.Server.Migrations
                     b.HasData(
                         new
                         {
-                            ProductVariantId = 1,
-                            OriginalPrice = 1600.00m,
-                            Price = 1400.00m,
                             ProductId = 1,
-                            ProductTypeId = 1
-                        },
-                        new
-                        {
-                            ProductVariantId = 2,
+                            ProductTypeId = 1,
                             OriginalPrice = 1600.00m,
-                            Price = 1500.00m,
-                            ProductId = 1,
-                            ProductTypeId = 2
+                            Price = 1400.00m
                         },
                         new
                         {
-                            ProductVariantId = 3,
+                            ProductId = 1,
+                            ProductTypeId = 2,
                             OriginalPrice = 1600.00m,
-                            Price = 1600.00m,
+                            Price = 1500.00m
+                        },
+                        new
+                        {
                             ProductId = 1,
-                            ProductTypeId = 3
+                            ProductTypeId = 3,
+                            OriginalPrice = 1600.00m,
+                            Price = 1600.00m
                         },
                         new
                         {
-                            ProductVariantId = 4,
-                            OriginalPrice = 2000.00m,
-                            Price = 1800.00m,
                             ProductId = 2,
-                            ProductTypeId = 1
-                        },
-                        new
-                        {
-                            ProductVariantId = 5,
+                            ProductTypeId = 1,
                             OriginalPrice = 2000.00m,
-                            Price = 1900.00m,
-                            ProductId = 2,
-                            ProductTypeId = 2
+                            Price = 1800.00m
                         },
                         new
                         {
-                            ProductVariantId = 6,
+                            ProductId = 2,
+                            ProductTypeId = 2,
                             OriginalPrice = 2000.00m,
-                            Price = 2000.00m,
-                            ProductId = 2,
-                            ProductTypeId = 3
+                            Price = 1900.00m
                         },
                         new
                         {
-                            ProductVariantId = 7,
-                            OriginalPrice = 5000.00m,
-                            Price = 4500.00m,
+                            ProductId = 2,
+                            ProductTypeId = 3,
+                            OriginalPrice = 2000.00m,
+                            Price = 2000.00m
+                        },
+                        new
+                        {
                             ProductId = 3,
-                            ProductTypeId = 4
+                            ProductTypeId = 4,
+                            OriginalPrice = 5000.00m,
+                            Price = 4500.00m
                         },
                         new
                         {
-                            ProductVariantId = 8,
-                            OriginalPrice = 5000.00m,
-                            Price = 5000.00m,
                             ProductId = 3,
-                            ProductTypeId = 5
+                            ProductTypeId = 5,
+                            OriginalPrice = 5000.00m,
+                            Price = 5000.00m
                         });
                 });
 
@@ -359,15 +353,23 @@ namespace BlazorEccomerce.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BlazorEccomerce.Shared.ProductVariant", "ProductVariant")
+                    b.HasOne("BlazorEccomerce.Shared.Product", "Product")
                         .WithMany()
-                        .HasForeignKey("ProductVariantId")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlazorEccomerce.Shared.ProductType", "ProductType")
+                        .WithMany()
+                        .HasForeignKey("ProductTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Cart");
 
-                    b.Navigation("ProductVariant");
+                    b.Navigation("Product");
+
+                    b.Navigation("ProductType");
                 });
 
             modelBuilder.Entity("BlazorEccomerce.Shared.Product", b =>

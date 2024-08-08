@@ -10,85 +10,111 @@ namespace BlazorEccomerce.Server.Controllers
 	{
 		private readonly ICartService _cartService;
 		private readonly IProductService _productService;
+		private readonly DataContext _context;
 
-		public CartController(ICartService cartService, IProductService productService)
+		public CartController(DataContext context,ICartService cartService, IProductService productService)
         {
             _cartService = cartService;
 			_productService = productService;
+			_context = context;
 		}
 
 		[HttpPost("add/{userId}")]
-		public async Task<IActionResult> AddToCart(int userId, [FromBody] CartItemDTO cartItem)
+        public async Task<IActionResult> AddToCart(int userId, [FromBody] CartItemDTO cartItemDTO)
+        {
+            var cartIdResponse = await _cartService.GetCartIdForUserAsync(userId);
+            if (!cartIdResponse.Success)
+            {
+                return BadRequest(cartIdResponse.Message);
+            }
+
+            var cartItem = new CartItem
+            {
+                CartId = cartIdResponse.Data,
+                ProductVariantId = cartItemDTO.ProductVariantId,
+                Quantity = cartItemDTO.Quantity,
+                Price = cartItemDTO.Price
+            };
+
+            _context.CartItems.Add(cartItem);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpGet("items/{userId}")]
+        public async Task<ActionResult<ServiceResponse<List<CartItemDTO>>>> GetCartItems(int userId)
+        {
+            var result = await _cartService.GetCartIdForUserAsync(userId);
+            if (result.Success)
+            {
+                // Fetch cart items using the cart ID
+                var cartItems = await _context.CartItems
+                    .Where(ci => ci.CartId == result.Data)
+					.Include(ci => ci.ProductVariant)
+			        .ThenInclude(pv => pv.Product)
+			        .Include(ci => ci.ProductVariant)
+			        .ThenInclude(pv => pv.ProductType)
+					.ToListAsync();
+
+                var cartItemDTOs = cartItems.Select(ci => new CartItemDTO
+                {
+                    ProductVariantId = ci.ProductVariantId,
+					ProductTypeId = ci.ProductVariant?.ProductTypeId ?? default,
+					Quantity = ci.Quantity,
+                    Price = ci.Price
+                }).ToList();
+
+                return Ok(new ServiceResponse<List<CartItemDTO>> { Data = cartItemDTOs });
+            }
+            return NotFound(result.Message);
+        }
+
+        [HttpGet("products/{userId}")]
+        public async Task<ActionResult<ServiceResponse<List<CartProductResponseDTO>>>> GetCartProducts(int userId)
+        {
+            var cartIdResult = await _cartService.GetCartIdForUserAsync(userId);
+
+            if (!cartIdResult.Success)
+            {
+                return NotFound("Cart not found");
+            }
+
+            var cartItems = await _context.CartItems
+                .Where(ci => ci.CartId == cartIdResult.Data)
+                .Include(ci => ci.ProductVariant)
+                .ThenInclude(pv => pv.Product)
+                .Include(ci => ci.ProductVariant)
+                .ThenInclude(pv => pv.ProductType)
+                .ToListAsync();
+
+            var cartProductResponse = cartItems.Select(item => new CartProductResponseDTO
+            {
+                ProductId = item.ProductVariant.ProductId,
+                Title = item.ProductVariant.Product.Title,
+                ProductType = item.ProductVariant.ProductType.Name,
+                ImageUrl = item.ProductVariant.Product.ImageUrl,
+                Price = item.Price,
+                Quantity = item.Quantity
+            }).ToList();
+
+            return Ok(new ServiceResponse<List<CartProductResponseDTO>> { Data = cartProductResponse });
+        }
+
+		[HttpPut("update/{userId}")]
+		public async Task<ActionResult<ServiceResponse<bool>>> UpdateUserCart(int userId, [FromBody] List<CartItemDTO> cartItemsDTO)
 		{
 			if (userId <= 0)
 			{
 				return BadRequest("Invalid user ID");
 			}
 
-			var result = await _cartService.AddToCartAsync(userId, cartItem);
-			if (!result.Success)
+			if (cartItemsDTO == null || !cartItemsDTO.Any())
 			{
-				return BadRequest(result.Message);
+				return BadRequest("Cart items are required.");
 			}
 
-			return Ok();
-		}
-
-		[HttpGet("items/{userId}")]
-		public async Task<ActionResult<ServiceResponse<List<CartItemDTO>>>> GetCartItems(int userId)
-		{
-			var result = await _cartService.GetCartByUserIdAsync(userId);
-			if (result.Success)
-			{
-				return Ok(result);
-			}
-			return NotFound(result.Message);
-		}
-
-		[HttpGet("products/{userId}")]
-		public async Task<ActionResult<ServiceResponse<List<CartProductResponseDTO>>>> GetCartProducts(int userId)
-		{
-			var cartResult = await _cartService.GetCartByUserIdAsync(userId);
-
-			if (!cartResult.Success || cartResult.Data == null)
-			{
-				return NotFound("Cart not found");
-			}
-
-			var cartItems = cartResult.Data.CartItems; 
-			var cartProductResponse = new List<CartProductResponseDTO>();
-
-			foreach (var item in cartItems)
-			{
-				var productResult = await _productService.GetProductAsync(item.ProductId);
-				if (productResult.Success && productResult.Data != null)
-				{
-					var product = productResult.Data;
-
-					cartProductResponse.Add(new CartProductResponseDTO
-					{
-						ProductId = item.ProductId,
-						Title = product.Title,
-						ProductType = "Unknown", 
-						ImageUrl = product.ImageUrl,
-						Price = item.Price,
-						Quantity = item.Quantity
-					});
-				}
-			}
-
-			return Ok(new ServiceResponse<List<CartProductResponseDTO>> { Data = cartProductResponse });
-		}
-
-		[HttpPost("update/{userId}")]
-		public async Task<ActionResult<ServiceResponse<bool>>> UpdateUserCart(int userId, [FromBody] List<CartItemDTO> cartItems)
-		{
-			if (userId <= 0)
-			{
-				return BadRequest("Invalid user ID");
-			}
-
-			var result = await _cartService.UpdateCartForUserAsync(userId, cartItems);
+			var result = await _cartService.UpdateCartForUserAsync(userId, cartItemsDTO);
 			if (!result.Success)
 			{
 				return BadRequest(result.Message);
@@ -98,20 +124,20 @@ namespace BlazorEccomerce.Server.Controllers
 		}
 
 		[HttpDelete("remove/{userId}/{productId}/{productTypeId}")]
-		public async Task<IActionResult> RemoveProductFromCart(int userId, int productId, int productTypeId)
-		{
-			if (userId <= 0)
-			{
-				return BadRequest("Invalid user ID");
-			}
+        public async Task<IActionResult> RemoveProductFromCart(int userId, int productVariantId)
+        {
+            if (userId <= 0)
+            {
+                return BadRequest("Invalid user ID");
+            }
 
-			var result = await _cartService.RemoveProductFromCartAsync(userId, productId, productTypeId);
-			if (!result.Success)
-			{
-				return BadRequest(result.Message);
-			}
+            var result = await _cartService.RemoveProductFromCartAsync(userId, productVariantId);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
 
-			return Ok();
-		}
-	}
+            return Ok();
+        }
+    }
 }

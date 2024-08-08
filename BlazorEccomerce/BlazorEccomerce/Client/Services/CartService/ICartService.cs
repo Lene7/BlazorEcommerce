@@ -7,6 +7,7 @@
 		Task<List<CartItemDTO>> GetCartItems();
 		Task<List<CartProductResponseDTO>> GetCartProducts();
 		Task RemoveProductFromCart(int productId, int productTypeId);
-		Task UpdateQuantity(CartItemDTO cartItem);
+        Task UpdateQuantity(List<CartItemDTO> cartItem);
+        Task UpdateCartForUserAsync(int userId, List<CartItemDTO> cartItemsDTO);
 	}
 }

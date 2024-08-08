@@ -10,7 +10,7 @@
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			modelBuilder.Entity<ProductVariant>()
-				.HasKey(p => new { p.ProductId, p.ProductTypeId });
+				.HasKey(pv => pv.ProductVariantId);
 
 			modelBuilder.Entity<ProductType>().HasData(
 					new ProductType { Id = 1, Name = "Sunrise"},
@@ -76,6 +76,7 @@
 			modelBuilder.Entity<ProductVariant>().HasData(
 					new ProductVariant
 					{
+						ProductVariantId = 1,
 						ProductId = 1,
 						ProductTypeId = 1,
 						Price = 1400.00m,
@@ -83,6 +84,7 @@
 					},
 					new ProductVariant
 					{
+						ProductVariantId = 2,
 						ProductId = 1,
 						ProductTypeId = 2,
 						Price = 1500.00m,
@@ -90,6 +92,7 @@
 					},
 					new ProductVariant
 					{
+						ProductVariantId = 3,
 						ProductId = 1,
 						ProductTypeId = 3,
 						Price = 1600.00m,
@@ -97,6 +100,7 @@
 					},
 					new ProductVariant
 					{
+						ProductVariantId = 4,
 						ProductId = 2,
 						ProductTypeId = 1,
 						Price = 1800.00m,
@@ -104,6 +108,7 @@
 					},
 					new ProductVariant
 					{
+						ProductVariantId = 5,
 						ProductId = 2,
 						ProductTypeId = 2,
 						Price = 1900.00m,
@@ -111,6 +116,7 @@
 					},
 					new ProductVariant
 					{
+						ProductVariantId = 6,
 						ProductId = 2,
 						ProductTypeId = 3,
 						Price = 2000.00m,
@@ -118,6 +124,7 @@
 					},
 					new ProductVariant
 					{
+						ProductVariantId = 7,
 						ProductId = 3,
 						ProductTypeId = 4,
 						Price = 4500.00m,
@@ -125,6 +132,7 @@
 					},
 					new ProductVariant
 					{
+						ProductVariantId = 8,
 						ProductId = 3,
 						ProductTypeId = 5,
 						Price = 5000.00m,
@@ -143,14 +151,9 @@
 				.HasForeignKey(ci => ci.CartId);
 
 			modelBuilder.Entity<CartItem>()
-				.HasOne(ci => ci.Product)
+				.HasOne(ci => ci.ProductVariant)
 				.WithMany()
-				.HasForeignKey(ci => ci.ProductId);
-
-			modelBuilder.Entity<CartItem>()
-				.HasOne(ci => ci.ProductType)
-				.WithMany()
-				.HasForeignKey(ci => ci.ProductTypeId);
+				.HasForeignKey(ci => ci.ProductVariantId);
 		}
 
 		public DbSet<Product> Products { get; set; }

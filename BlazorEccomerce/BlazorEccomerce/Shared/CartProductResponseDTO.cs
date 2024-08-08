@@ -15,8 +15,9 @@ namespace BlazorEccomerce.Shared
         public string ImageUrl { get; set; } = string.Empty;
         public decimal Price { get; set; }
 		public int Quantity { get; set; }
+		public int ProductVariantId { get; set; }
 
-		public CartProductResponseDTO(int productId, string title, int productTypeId, string productType, string imageUrl, decimal price, int quantity)
+		public CartProductResponseDTO(int productId, string title, int productTypeId, string productType, string imageUrl, decimal price, int quantity, int productVariantId)
 		{
 			ProductId = productId;
 			Title = title;
@@ -25,6 +26,7 @@ namespace BlazorEccomerce.Shared
 			ImageUrl = imageUrl;
 			Price = price;
 			Quantity = quantity;
+			ProductVariantId = productVariantId;
 		}
 
 		

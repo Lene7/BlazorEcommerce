@@ -28,17 +28,17 @@ namespace BlazorEccomerce.Server.Services.CartService
 				return response;
 			}
 
-			var productIds = cartItemsDTO.Select(dto => dto.ProductId).Distinct();
+			var productVariantIds = cartItemsDTO.Select(dto => dto.ProductVariantId).Distinct();
 			var productVariants = await _context.ProductVariants
 				.Include(v => v.Product)
 				.Include(v => v.ProductType)
-				.Where(v => productIds.Contains(v.ProductId))
+				.Where(v => productVariantIds.Contains(v.ProductVariantId)) // Use ProductVariantId for filtering
 				.ToListAsync();
 
 			foreach (var dto in cartItemsDTO)
 			{
 				var productVariant = productVariants
-					.FirstOrDefault(v => v.ProductId == dto.ProductId && v.ProductTypeId == dto.ProductTypeId);
+					.FirstOrDefault(v => v.ProductVariantId == dto.ProductVariantId);
 
 				if (productVariant != null)
 				{
@@ -79,52 +79,56 @@ namespace BlazorEccomerce.Server.Services.CartService
 
 		public async Task<ServiceResponse<List<CartProductResponseDTO>>> GetCartForUserAsync(int userId)
 		{
-			var response = new ServiceResponse<List<CartProductResponseDTO>>
-			{
-				Data = new List<CartProductResponseDTO>()
-			};
+            var response = new ServiceResponse<List<CartProductResponseDTO>>
+            {
+                Data = new List<CartProductResponseDTO>()
+            };
 
-			var cartItems = await _context.CartItems
-			   .Where(ci => ci.Cart.UserId == userId)
-			   .ToListAsync();
+            // Fetch cart items for the user including related ProductVariant, Product, and ProductType
+            var cartItems = await _context.CartItems
+                .Include(ci => ci.ProductVariant)
+                .ThenInclude(pv => pv.Product)
+                .Include(ci => ci.ProductVariant)
+                .ThenInclude(pv => pv.ProductType)
+                .Where(ci => ci.Cart.UserId == userId)
+                .ToListAsync();
 
-			var productIds = cartItems.Select(ci => ci.ProductId).Distinct();
-			var productVariants = await _context.ProductVariants
-				.Where(v => productIds.Contains(v.ProductId))
-				.Include(v => v.Product)
-				.Include(v => v.ProductType)
-				.ToListAsync();
+            // Group cart items by ProductVariant
+            var productVariants = cartItems
+                .Select(ci => ci.ProductVariant)
+                .Distinct()
+                .ToList();
 
-			foreach (var item in cartItems)
-			{
-				var productVariant = productVariants
-					.FirstOrDefault(v => v.ProductId == item.ProductId && v.ProductTypeId == item.ProductTypeId);
+            foreach (var item in cartItems)
+            {
+                var productVariant = productVariants
+                    .FirstOrDefault(v => v.ProductId == item.ProductVariant.ProductId && v.ProductTypeId == item.ProductVariant.ProductTypeId);
 
-				if (productVariant != null && productVariant.Product != null && productVariant.ProductType != null)
-				{
-					var cartProduct = new CartProductResponseDTO
-					{
-						ProductId = productVariant.ProductId,
-						Title = productVariant.Product.Title,
-						ImageUrl = productVariant.Product.ImageUrl,
-						Price = productVariant.Price,
-						ProductType = productVariant.ProductType.Name,
-						ProductTypeId = productVariant.ProductTypeId,
-						Quantity = item.Quantity
-					};
+                if (productVariant != null && productVariant.Product != null && productVariant.ProductType != null)
+                {
+                    var cartProduct = new CartProductResponseDTO
+                    {
+                        ProductId = productVariant.ProductId,
+                        Title = productVariant.Product.Title,
+                        ImageUrl = productVariant.Product.ImageUrl,
+                        Price = productVariant.Price,
+                        ProductType = productVariant.ProductType.Name,
+                        ProductTypeId = productVariant.ProductTypeId,
+                        Quantity = item.Quantity
+                    };
 
-					response.Data.Add(cartProduct);
-				}
-			}
+                    response.Data.Add(cartProduct);
+                }
+            }
 
-			response.Success = response.Data.Any();
-			if (!response.Success)
-			{
-				response.Message = "No valid products found.";
-			}
+            response.Success = response.Data.Any();
+            if (!response.Success)
+            {
+                response.Message = "No valid products found.";
+            }
 
-			return response;
-		}
+            return response;
+        }
 
 		public async Task<ServiceResponse<bool>> UpdateCartForUserAsync(int userId, List<BlazorEccomerce.Shared.CartItemDTO> cartItemsDTO)
 		{
@@ -140,9 +144,9 @@ namespace BlazorEccomerce.Server.Services.CartService
 				return response;
 			}
 
-			var newProductIds = cartItemsDTO.Select(dto => dto.ProductId).Distinct();
+			var newProductVariantIds = cartItemsDTO.Select(dto => dto.ProductVariantId).Distinct();
 			var itemsToRemove = existingCart.CartItems
-				.Where(ci => !newProductIds.Contains(ci.ProductId))
+				.Where(ci => !newProductVariantIds.Contains(ci.ProductVariantId))
 				.ToList();
 
 			_context.CartItems.RemoveRange(itemsToRemove);
@@ -150,19 +154,19 @@ namespace BlazorEccomerce.Server.Services.CartService
 			foreach (var dto in cartItemsDTO)
 			{
 				var existingItem = existingCart.CartItems
-					.FirstOrDefault(ci => ci.ProductId == dto.ProductId && ci.ProductTypeId == dto.ProductTypeId);
+					.FirstOrDefault(ci => ci.ProductVariantId == dto.ProductVariantId);
 
 				if (existingItem != null)
 				{
 					existingItem.Quantity = dto.Quantity;
 					existingItem.Price = dto.Price;
+					_context.Entry(existingItem).State = EntityState.Modified;
 				}
 				else
 				{
 					var newItem = new CartItem
 					{
-						ProductId = dto.ProductId,
-						ProductTypeId = dto.ProductTypeId,
+						ProductVariantId = dto.ProductVariantId,
 						Quantity = dto.Quantity,
 						Price = dto.Price,
 						CartId = existingCart.Id
@@ -181,33 +185,32 @@ namespace BlazorEccomerce.Server.Services.CartService
 		{
 			var response = new ServiceResponse<bool> { Data = false };
 
-			var existingCart = await _context.Carts
-				.Include(c => c.CartItems)
-				.FirstOrDefaultAsync(c => c.UserId == userId);
-
-			if (existingCart == null)
+			var cartIdResponse = await GetCartIdForUserAsync(userId);
+			if (!cartIdResponse.Success)
 			{
-				response.Message = "Cart not found for user.";
+				response.Message = cartIdResponse.Message;
 				return response;
 			}
 
-			var existingItem = existingCart.CartItems
-				.FirstOrDefault(ci => ci.ProductId == cartItemDTO.ProductId && ci.ProductTypeId == cartItemDTO.ProductTypeId);
+			var cartId = cartIdResponse.Data;
+
+			var existingItem = await _context.CartItems
+				.FirstOrDefaultAsync(ci => ci.CartId == cartId && ci.ProductVariantId == cartItemDTO.ProductVariantId);
 
 			if (existingItem != null)
 			{
 				existingItem.Quantity += cartItemDTO.Quantity;
 				existingItem.Price = cartItemDTO.Price;
+				_context.Entry(existingItem).State = EntityState.Modified;
 			}
 			else
 			{
 				var newItem = new CartItem
 				{
-					ProductId = cartItemDTO.ProductId,
-					ProductTypeId = cartItemDTO.ProductTypeId,
+					ProductVariantId = cartItemDTO.ProductVariantId,
 					Quantity = cartItemDTO.Quantity,
 					Price = cartItemDTO.Price,
-					CartId = existingCart.Id
+					CartId = cartId
 				};
 				_context.CartItems.Add(newItem);
 			}
@@ -218,26 +221,30 @@ namespace BlazorEccomerce.Server.Services.CartService
 		}
 
 
-		public async Task<ServiceResponse<BlazorEccomerce.Shared.Cart>> GetCartByUserIdAsync(int userId)
+		public async Task<ServiceResponse<int>> GetCartIdForUserAsync(int userId)
 		{
-			var response = new ServiceResponse<BlazorEccomerce.Shared.Cart> { Data = null };
+			var response = new ServiceResponse<int> { Data = 0 };
 
 			var cart = await _context.Carts
-				.Include(c => c.CartItems)
 				.FirstOrDefaultAsync(c => c.UserId == userId);
 
 			if (cart == null)
 			{
-				response.Message = "Cart not found for user.";
-				return response;
+				// Create a new cart if it doesn't exist
+				cart = new BlazorEccomerce.Shared.Cart
+				{
+					UserId = userId
+				};
+				_context.Carts.Add(cart);
+				await _context.SaveChangesAsync();
 			}
 
-			response.Data = cart;
+			response.Data = cart.Id;
 			response.Success = true;
 			return response;
 		}
 
-		public async Task<ServiceResponse<bool>> RemoveProductFromCartAsync(int userId, int productId, int productTypeId)
+		public async Task<ServiceResponse<bool>> RemoveProductFromCartAsync(int userId, int productVariantId)
 		{
 			var response = new ServiceResponse<bool> { Data = false };
 
@@ -252,7 +259,7 @@ namespace BlazorEccomerce.Server.Services.CartService
 			}
 
 			var itemToRemove = cart.CartItems
-				.FirstOrDefault(ci => ci.ProductId == productId && ci.ProductTypeId == productTypeId);
+				.FirstOrDefault(ci => ci.ProductVariantId == productVariantId);
 
 			if (itemToRemove == null)
 			{
