@@ -11,6 +11,7 @@ namespace BlazorEccomerce.Shared
     public class ProductVariant
     {
         public int ProductVariantId { get; set; }
+
         [JsonIgnore]
         public Product Product { get; set; }
         public int ProductId { get; set; }
@@ -22,5 +23,5 @@ namespace BlazorEccomerce.Shared
 
 		[Column(TypeName = "decimal(18,2)")]
 		public decimal OriginalPrice { get; set; }
-    }
+	}
 }

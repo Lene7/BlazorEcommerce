@@ -22,6 +22,21 @@ namespace BlazorEccomerce.Server.Controllers
 		[HttpPost("add/{userId}")]
 		public async Task<IActionResult> AddToCart(int userId, [FromBody] CartItemDTO cartItemDTO)
 		{
+			// Ensure the correct ProductId and ProductVariantId are passed
+			Console.WriteLine($"ProductId: {cartItemDTO.ProductId}, ProductVariantId: {cartItemDTO.ProductVariantId}");
+
+			var productExists = await _context.Products.AnyAsync(p => p.Id == cartItemDTO.ProductId);
+			if (!productExists)
+			{
+				Console.WriteLine($"Product with Id {cartItemDTO.ProductId} does not exist.");
+				return BadRequest("The product does not exist.");
+			}
+			else
+			{
+				Console.WriteLine($"Product with Id {cartItemDTO.ProductId} exists.");
+			}
+
+			
 			var cartIdResponse = await _cartService.GetCartIdForUserAsync(userId);
 			if (!cartIdResponse.Success)
 			{
@@ -44,6 +59,7 @@ namespace BlazorEccomerce.Server.Controllers
 				var cartItem = new CartItem
 				{
 					CartId = cartId,
+					ProductId = cartItemDTO.ProductId,
 					ProductVariantId = cartItemDTO.ProductVariantId,
 					Quantity = cartItemDTO.Quantity,
 					Price = cartItemDTO.Price
@@ -75,6 +91,7 @@ namespace BlazorEccomerce.Server.Controllers
                 var cartItemDTOs = cartItems.Select(ci => new CartItemDTO
                 {
                     ProductVariantId = ci.ProductVariantId,
+					ProductId = ci.ProductId,
 					ProductTypeId = ci.ProductVariant?.ProductTypeId ?? default,
 					Quantity = ci.Quantity,
                     Price = ci.Price
@@ -105,7 +122,7 @@ namespace BlazorEccomerce.Server.Controllers
 
             var cartProductResponse = cartItems.Select(item => new CartProductResponseDTO
             {
-                ProductId = item.ProductVariant.ProductId,
+                ProductId = item.ProductId,
                 Title = item.ProductVariant.Product.Title,
                 ProductType = item.ProductVariant.ProductType.Name,
                 ImageUrl = item.ProductVariant.Product.ImageUrl,
@@ -133,7 +150,8 @@ namespace BlazorEccomerce.Server.Controllers
 			}
 			catch (Exception ex)
 			{
-				return StatusCode(500, $"Internal server error: {ex.Message}");
+				var errorMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+				return StatusCode(500, $"Internal server error: {errorMessage}");
 			}
 		}
 

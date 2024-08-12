@@ -85,7 +85,8 @@ else
 		{
 			var cartItemDTO = new CartItemDTO
 				{
-					ProductVariantId = productVariant.ProductId, 
+					ProductVariantId = productVariant.ProductVariantId, 
+					ProductId = productVariant.ProductId,
 					Quantity = 1,
 					Price = productVariant.Price
 				};

@@ -88,24 +88,12 @@ else
 		var cartItemDTO = new CartItemDTO
 			{
 				ProductVariantId = product.ProductVariantId,
+				ProductId = product.ProductId,
 				Quantity = product.Quantity,
 				Price = product.Price
 			};
 
-		var currentItems = await CartService.GetCartItems();
-
-		var existingItem = currentItems.FirstOrDefault(item => item.ProductVariantId == cartItemDTO.ProductVariantId);
-
-		if (existingItem != null)
-		{
-			existingItem.Quantity = cartItemDTO.Quantity;
-		}
-		else
-		{
-			currentItems.Add(cartItemDTO);
-		}
-
-		await CartService.UpdateCartForUserAsync(int.Parse(userId), currentItems);
+		await CartService.UpdateCartForUserAsync(int.Parse(userId), new List<CartItemDTO> { cartItemDTO });
 		await LoadCart();
 	}
 }

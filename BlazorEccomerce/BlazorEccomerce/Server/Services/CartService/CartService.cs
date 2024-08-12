@@ -87,7 +87,7 @@ namespace BlazorEccomerce.Server.Services.CartService
             // Fetch cart items for the user including related ProductVariant, Product, and ProductType
             var cartItems = await _context.CartItems
                 .Include(ci => ci.ProductVariant)
-                .ThenInclude(pv => pv.Product)
+                .ThenInclude(pv => pv.ProductId)
                 .Include(ci => ci.ProductVariant)
                 .ThenInclude(pv => pv.ProductType)
                 .Where(ci => ci.Cart.UserId == userId)
@@ -145,17 +145,15 @@ namespace BlazorEccomerce.Server.Services.CartService
 					return response;
 				}
 
-				var newProductVariantIds = cartItemsDTO.Select(dto => dto.ProductVariantId).Distinct();
-				var itemsToRemove = existingCart.CartItems
-					.Where(ci => !newProductVariantIds.Contains(ci.ProductVariantId))
-					.ToList();
-
+				var newProductIds = cartItemsDTO.Select(dto => dto.ProductId).Distinct();
+				var itemsToRemove = existingCart.CartItems.Where(ci => !newProductIds.Contains(ci.ProductId)).ToList();
+				
 				_context.CartItems.RemoveRange(itemsToRemove);
 
 				foreach (var dto in cartItemsDTO)
 				{
 					var existingItem = existingCart.CartItems
-						.FirstOrDefault(ci => ci.ProductVariantId == dto.ProductVariantId);
+						.FirstOrDefault(ci => ci.ProductId == dto.ProductId);
 
 					if (existingItem != null)
 					{
@@ -168,6 +166,7 @@ namespace BlazorEccomerce.Server.Services.CartService
 						var newItem = new CartItem
 						{
 							ProductVariantId = dto.ProductVariantId,
+							ProductId = dto.ProductId,
 							Quantity = dto.Quantity,
 							Price = dto.Price,
 							CartId = existingCart.Id
@@ -210,6 +209,7 @@ namespace BlazorEccomerce.Server.Services.CartService
 				var newItem = new CartItem
 				{
 					ProductVariantId = cartItemDTO.ProductVariantId,
+					ProductId = cartItemDTO.ProductId,
 					Quantity = cartItemDTO.Quantity,
 					Price = cartItemDTO.Price,
 					CartId = cartId

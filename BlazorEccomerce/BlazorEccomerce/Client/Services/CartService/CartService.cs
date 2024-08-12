@@ -29,7 +29,7 @@ namespace BlazorEccomerce.Client.Services.CartService
 				{
 					throw new Exception("User not authenticated");
 				}
-
+				Console.WriteLine($"Adding to cart - ProductVariantId: {cartItem.ProductVariantId}, ProductTypeId: {cartItem.ProductTypeId}, ProductId: {cartItem.ProductId}, Quantity: {cartItem.Quantity}, Price: {cartItem.Price}");
 				var currentItems = await GetCartItems();
 				var existingItem = currentItems.FirstOrDefault(item => item.ProductVariantId == cartItem.ProductVariantId);
 
@@ -66,6 +66,7 @@ namespace BlazorEccomerce.Client.Services.CartService
 				response.EnsureSuccessStatusCode();
 
 				var result = await response.Content.ReadFromJsonAsync<ServiceResponse<List<CartItemDTO>>>();
+				Console.WriteLine($"Fetched cart items: {string.Join(", ", result.Data.Select(i => i.ProductVariantId))}");
 				return result.Data;
 			}
 			catch (Exception ex)

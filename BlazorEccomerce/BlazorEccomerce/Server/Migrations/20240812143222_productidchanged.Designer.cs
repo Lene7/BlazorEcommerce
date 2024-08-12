@@ -4,6 +4,7 @@ using BlazorEccomerce.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlazorEccomerce.Server.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240812143222_productidchanged")]
+    partial class productidchanged
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -67,6 +69,8 @@ namespace BlazorEccomerce.Server.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CartId");
+
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("ProductVariantId");
 
@@ -122,6 +126,9 @@ namespace BlazorEccomerce.Server.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<int?>("CartItemId")
+                        .HasColumnType("int");
+
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
@@ -141,6 +148,8 @@ namespace BlazorEccomerce.Server.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CartItemId");
 
                     b.HasIndex("CategoryId");
 
@@ -362,6 +371,12 @@ namespace BlazorEccomerce.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("BlazorEccomerce.Shared.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("BlazorEccomerce.Shared.ProductVariant", "ProductVariant")
                         .WithMany()
                         .HasForeignKey("ProductVariantId")
@@ -370,11 +385,17 @@ namespace BlazorEccomerce.Server.Migrations
 
                     b.Navigation("Cart");
 
+                    b.Navigation("Product");
+
                     b.Navigation("ProductVariant");
                 });
 
             modelBuilder.Entity("BlazorEccomerce.Shared.Product", b =>
                 {
+                    b.HasOne("BlazorEccomerce.Shared.CartItem", null)
+                        .WithMany("Products")
+                        .HasForeignKey("CartItemId");
+
                     b.HasOne("BlazorEccomerce.Shared.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
@@ -406,6 +427,11 @@ namespace BlazorEccomerce.Server.Migrations
             modelBuilder.Entity("BlazorEccomerce.Shared.Cart", b =>
                 {
                     b.Navigation("CartItems");
+                });
+
+            modelBuilder.Entity("BlazorEccomerce.Shared.CartItem", b =>
+                {
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("BlazorEccomerce.Shared.Product", b =>
