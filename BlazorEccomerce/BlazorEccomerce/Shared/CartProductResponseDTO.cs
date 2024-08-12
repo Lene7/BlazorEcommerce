@@ -8,6 +8,7 @@ namespace BlazorEccomerce.Shared
 {
 	public class CartProductResponseDTO
 	{
+		public int CartItemId { get; set; }
         public int ProductId { get; set; }
         public string Title { get; set; } = string.Empty;
         public int ProductTypeId { get; set; }
@@ -17,8 +18,9 @@ namespace BlazorEccomerce.Shared
 		public int Quantity { get; set; }
 		public int ProductVariantId { get; set; }
 
-		public CartProductResponseDTO(int productId, string title, int productTypeId, string productType, string imageUrl, decimal price, int quantity, int productVariantId)
+		public CartProductResponseDTO(int cartItemId, int productId, string title, int productTypeId, string productType, string imageUrl, decimal price, int quantity, int productVariantId)
 		{
+			CartItemId = cartItemId;
 			ProductId = productId;
 			Title = title;
 			ProductTypeId = productTypeId;

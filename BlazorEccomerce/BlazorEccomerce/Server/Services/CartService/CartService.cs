@@ -106,16 +106,18 @@ namespace BlazorEccomerce.Server.Services.CartService
 
                 if (productVariant != null && productVariant.Product != null && productVariant.ProductType != null)
                 {
-                    var cartProduct = new CartProductResponseDTO
-                    {
-                        ProductId = productVariant.ProductId,
-                        Title = productVariant.Product.Title,
-                        ImageUrl = productVariant.Product.ImageUrl,
-                        Price = productVariant.Price,
-                        ProductType = productVariant.ProductType.Name,
-                        ProductTypeId = productVariant.ProductTypeId,
-                        Quantity = item.Quantity
-                    };
+					var cartProduct = new CartProductResponseDTO
+					{
+						CartItemId = item.Id,
+						ProductId = productVariant.ProductId,
+						Title = productVariant.Product.Title,
+						ImageUrl = productVariant.Product.ImageUrl,
+						Price = productVariant.Price,
+						ProductType = productVariant.ProductType.Name,
+						ProductTypeId = productVariant.ProductTypeId,
+						Quantity = item.Quantity,
+						ProductVariantId = productVariant.ProductVariantId
+					};
 
                     response.Data.Add(cartProduct);
                 }
@@ -146,9 +148,9 @@ namespace BlazorEccomerce.Server.Services.CartService
 				}
 
 				var newProductIds = cartItemsDTO.Select(dto => dto.ProductId).Distinct();
-				var itemsToRemove = existingCart.CartItems.Where(ci => !newProductIds.Contains(ci.ProductId)).ToList();
+				//var itemsToRemove = existingCart.CartItems.Where(ci => !newProductIds.Contains(ci.ProductId)).ToList();
 				
-				_context.CartItems.RemoveRange(itemsToRemove);
+				//_context.CartItems.RemoveRange(itemsToRemove);
 
 				foreach (var dto in cartItemsDTO)
 				{
@@ -249,7 +251,7 @@ namespace BlazorEccomerce.Server.Services.CartService
 		public async Task<ServiceResponse<bool>> RemoveProductFromCartAsync(int userId, int cartItemId)
 		{
 			var response = new ServiceResponse<bool> { Data = false };
-
+			Console.WriteLine($"Removing item. UserId: {userId}, CartItemId: {cartItemId}");
 			var cart = await _context.Carts
 				.Include(c => c.CartItems)
 				.FirstOrDefaultAsync(c => c.UserId == userId);
@@ -265,7 +267,8 @@ namespace BlazorEccomerce.Server.Services.CartService
 
 			if (itemToRemove == null)
 			{
-				response.Message = "Item not found in cart.";
+				response.Message = $"Item with Id {cartItemId} not found in cart.";
+				Console.WriteLine(response.Message);
 				return response;
 			}
 

@@ -16,6 +16,7 @@ else
 	<div>
 		@foreach (var product in cartProducts)
 		{
+			Console.WriteLine($"Product: Id={product.CartItemId}, Title={product.Title}");
 			<div class="container">
 				<div class="image-wrapper">
 					<img src="@product.ImageUrl" class="image" />
@@ -27,7 +28,7 @@ else
 						@onchange="@((ChangeEventArgs e) => UpdateQuantity(e, product))"
 						class="form-control input-quantity"
 						min="1"/>
-					<button class="btn-delete" @onclick="@(() => RemoveProductFromCart(product.ProductId))">Delete</button>
+					<button class="btn-delete" @onclick="@(() => RemoveProductFromCart(product.CartItemId))">Delete</button>
 				</div>
 				<div class="cart-product-price">R @(product.Price * product.Quantity)</div>
 			</div>
@@ -49,6 +50,7 @@ else
 
 	private async Task RemoveProductFromCart(int cartItemId)
 	{
+		Console.WriteLine($"Attempting to remove item with CartItemId: {cartItemId}");
 		await CartService.RemoveProductFromCart(cartItemId);
 		await LoadCart();
 	}
