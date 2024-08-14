@@ -1,109 +1,136 @@
 ﻿@page "/cart"
 @inject ICartService CartService
-@inject AuthenticationStateProvider _authStateProvider
+@inject AuthenticationStateProvider AuthStateProvider
 @using System.Security.Claims
 
 <PageTitle>Shopping Cart</PageTitle>
 
 <h3>Shopping Cart</h3>
 
-@if(cartProducts == null || !cartProducts.Any())
+@if (cartDetail == null)
 {
-	<span>@message</span>
+    <span>@message</span>
 }
 else
 {
-	<div>
-		@foreach (var product in cartProducts)
-		{
-			Console.WriteLine($"Product: Id={product.ProductVariantId}, Title={product.Title}");
-			<div class="container">
-				<div class="image-wrapper">
-					<img src="@product.ImageUrl" class="image" />
-				</div>
-				<div class="name">
-					<h5><a href="/product/@product.ProductId">@product.Title</a></h5>
-					<span>@product.ProductType</span><br/>
-					<input type="number" value="@product.Quantity"
-						@onchange="@((ChangeEventArgs e) => UpdateQuantity(e, product))"
-						class="form-control input-quantity"
-						min="1"/>
-					<button class="btn-delete" @onclick="@(() => RemoveProductFromCart(product.ProductVariantId))">Delete</button>
-				</div>
-				<div class="cart-product-price">R @(product.Price * product.Quantity)</div>
-			</div>
-		}
-		<div class="cart-product-price">
-			Total (@cartProducts.Count): R @cartProducts.Sum(product => @product.Price * product.Quantity)
-		</div>
-	</div>
+    <div>
+        @if (cartDetail.Products.Any())
+        {
+            @foreach (var product in cartDetail.Products)
+            {
+                <div class="container">
+                    <div class="image-wrapper">
+                        <img src="@product.ImageUrl" class="image" />
+                    </div>
+                    <div class="name">
+                        <h5><a href="/product/@product.ProductId">@product.Title</a></h5>
+                        <span>@product.ProductType</span><br />
+                        <input type="number" value="@product.Quantity"
+                               @onchange="@((ChangeEventArgs e) => UpdateQuantity(e, product))"
+                               class="form-control input-quantity"
+                               min="1" />
+                        <button class="btn-delete" @onclick="@(() => RemoveProductFromCart(product.ProductVariantId))">Delete</button>
+                    </div>
+                    <div class="cart-product-price">R @(product.Price * product.Quantity)</div>
+                </div>
+            }
+            <div class="cart-product-price">
+                Total (@cartDetail.Products.Count): R @cartDetail.Products.Sum(p => p.Price * p.Quantity)
+            </div>
+        }
+        else
+        {
+            <span>Your cart is empty.</span>
+        }
+    </div>
 }
 
 @code {
-	List<CartProductResponseDTO> cartProducts = null;
-	string message = "Loading cart";
+    private CartDetailDTO cartDetail;
+    private string message = "Loading cart";
 
-	protected override async Task OnInitializedAsync()
-	{
-		await LoadCart();
-	}
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCart();
+    }
 
-	private async Task RemoveProductFromCart(int productVariantId)
-	{
-		Console.WriteLine($"Attempting to remove item with ProductVariantId: {productVariantId}");
-		await CartService.RemoveProductFromCart(productVariantId);
-		await LoadCart();
-	}
+    private async Task RemoveProductFromCart(int productVariantId)
+    {
+        try
+        {
+            Console.WriteLine($"Attempting to remove item with ProductVariantId: {productVariantId}");
+            await CartService.RemoveProductFromCart(productVariantId);
+            await LoadCart();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error removing product from cart: {ex.Message}");
+        }
+    }
 
-	private async Task LoadCart()
-	{
-		var authState = await _authStateProvider.GetAuthenticationStateAsync();
-		var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+    private async Task LoadCart()
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-		if (string.IsNullOrEmpty(userId))
-		{
-			throw new Exception("User not authenticated");
-		}
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new Exception("User not authenticated");
+            }
 
-		var cartItems = await CartService.GetCartItems();
-		if (cartItems.Count == 0)
-		{
-			message = "Your cart is empty.";
-			cartProducts = new List<CartProductResponseDTO>();
-		}
-		else
-		{
-			cartProducts = await CartService.GetCartProducts();
-			if (cartProducts == null || !cartProducts.Any())
-			{
-				message = "Failed to load cart products.";
-			}
-		}
-	}
+            var response = await CartService.GetCartDetails();
+            if (response.Success)
+            {
+                cartDetail = response.Data;
+                if (!cartDetail.Products.Any())
+                {
+                    message = "Your cart is empty.";
+                }
+            }
+            else
+            {
+                message = response.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading cart: {ex.Message}");
+            message = "An error occurred while loading the cart.";
+        }
+    }
 
-	private async Task UpdateQuantity(ChangeEventArgs e, CartProductResponseDTO product)
-	{
-		var authState = await _authStateProvider.GetAuthenticationStateAsync();
-		var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+    private async Task UpdateQuantity(ChangeEventArgs e, CartProductResponseDTO product)
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-		if (string.IsNullOrEmpty(userId))
-		{
-			throw new Exception("User not authenticated");
-		}
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new Exception("User not authenticated");
+            }
 
-		product.Quantity = int.Parse(e.Value.ToString());
-		if (product.Quantity < 1)
-			product.Quantity = 1;
+            product.Quantity = int.Parse(e.Value.ToString());
+            if (product.Quantity < 1)
+                product.Quantity = 1;
 
-		var cartItemDTO = new CartItemDTO
-			{
-				ProductVariantId = product.ProductVariantId,
-				ProductId = product.ProductId,
-				Quantity = product.Quantity,
-				Price = product.Price
-			};
+            var cartItemDTO = new CartItemDTO
+                {
+                    ProductVariantId = product.ProductVariantId,
+                    ProductId = product.ProductId,
+                    Quantity = product.Quantity,
+                    Price = product.Price
+                };
 
-		await CartService.UpdateCartForUserAsync(int.Parse(userId), new List<CartItemDTO> { cartItemDTO });
-		await LoadCart();
-	}
+            await CartService.UpdateCartForUserAsync(int.Parse(userId), new List<CartItemDTO> { cartItemDTO });
+            await LoadCart();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error updating quantity: {ex.Message}");
+        }
+    }
 }

@@ -18,6 +18,31 @@ namespace BlazorEccomerce.Client.Services.CartService
 		
 		public event Action OnChange;
 
+		public async Task<ServiceResponse<CartDetailDTO>> GetCartDetails()
+		{
+			try
+			{
+				var authState = await _authStateProvider.GetAuthenticationStateAsync();
+				var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+				if (string.IsNullOrEmpty(userId))
+				{
+					throw new Exception("User not authenticated");
+				}
+
+				var response = await _http.GetAsync($"api/cart/details/{userId}");
+				response.EnsureSuccessStatusCode();
+
+				var result = await response.Content.ReadFromJsonAsync<ServiceResponse<CartDetailDTO>>();
+				return result;
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine($"Error fetching cart details: {ex.Message}");
+				return new ServiceResponse<CartDetailDTO> { Success = false, Message = ex.Message };
+			}
+		}
+
 		public async Task AddToCart(CartItemDTO cartItem)
 		{
 			try
@@ -30,14 +55,29 @@ namespace BlazorEccomerce.Client.Services.CartService
 					throw new Exception("User not authenticated");
 				}
 				Console.WriteLine($"Adding to cart - ProductVariantId: {cartItem.ProductVariantId}, ProductTypeId: {cartItem.ProductTypeId}, ProductId: {cartItem.ProductId}, Quantity: {cartItem.Quantity}, Price: {cartItem.Price}");
-				var currentItems = await GetCartItems();
-				var existingItem = currentItems.FirstOrDefault(item => item.ProductVariantId == cartItem.ProductVariantId);
+				var cartDetailResponse = await GetCartDetails();
+                var cartDetails = cartDetailResponse.Data;
 
-				if (existingItem != null)
+                if (cartDetails == null)
+                {
+                    throw new Exception("Failed to load cart details.");
+                }
+
+                var existingItem = cartDetails.Products.FirstOrDefault(item => item.ProductVariantId == cartItem.ProductVariantId);
+                if (existingItem != null)
 				{
 					existingItem.Quantity += cartItem.Quantity;
-					await UpdateCartForUserAsync(int.Parse(userId), currentItems);
-				}
+
+                    var updatedCartItems = cartDetails.Products.Select(p => new CartItemDTO
+                    {
+                        ProductVariantId = p.ProductVariantId,
+                        ProductId = p.ProductId,
+                        Quantity = p.Quantity,
+                        Price = p.Price
+                    }).ToList();
+
+                    await UpdateCartForUserAsync(int.Parse(userId), updatedCartItems);
+                }
 				else
 				{
 					var response = await _http.PostAsJsonAsync($"api/cart/add/{userId}", cartItem);
@@ -48,57 +88,6 @@ namespace BlazorEccomerce.Client.Services.CartService
 			catch (Exception ex)
 			{
 				Console.Error.WriteLine($"Error adding item to cart: {ex.Message}");
-			}
-		}
-
-		public async Task<List<CartItemDTO>> GetCartItems()
-		{
-			try
-			{
-				var authState = await _authStateProvider.GetAuthenticationStateAsync();
-				var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-
-				if (string.IsNullOrEmpty(userId))
-				{
-					throw new Exception("User not authenticated");
-				}
-
-				var response = await _http.GetAsync($"api/cart/items/{userId}");
-				response.EnsureSuccessStatusCode();
-
-				var result = await response.Content.ReadFromJsonAsync<ServiceResponse<List<CartItemDTO>>>();
-				Console.WriteLine($"Fetched cart items: {string.Join(", ", result.Data.Select(i => i.ProductVariantId))}");
-				return result.Data;
-			}
-			catch (Exception ex)
-			{
-				Console.Error.WriteLine($"Error fetching cart items: {ex.Message}");
-				return new List<CartItemDTO>();
-			}
-		}
-
-		public async Task<List<CartProductResponseDTO>> GetCartProducts()
-		{
-			try
-			{
-				var authState = await _authStateProvider.GetAuthenticationStateAsync();
-				var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-
-				if (string.IsNullOrEmpty(userId))
-				{
-					throw new Exception("User not authenticated");
-				}
-
-				var response = await _http.GetAsync($"api/cart/products/{userId}");
-				response.EnsureSuccessStatusCode();
-
-				var result = await response.Content.ReadFromJsonAsync<ServiceResponse<List<CartProductResponseDTO>>>();
-				return result?.Data ?? new List<CartProductResponseDTO>();
-			}
-			catch (Exception ex)
-			{
-				Console.Error.WriteLine($"Error fetching cart products: {ex.Message}");
-				return new List<CartProductResponseDTO>();
 			}
 		}
 

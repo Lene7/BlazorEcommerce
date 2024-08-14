@@ -13,57 +13,58 @@ namespace BlazorEccomerce.Server.Services.CartService
             _context = context;
         }
 
-
-		public async Task<ServiceResponse<List<CartProductResponseDTO>>> GetCartProducts(List<BlazorEccomerce.Shared.CartItemDTO> cartItemsDTO)
+		public async Task<ServiceResponse<CartDetailDTO>> GetCartDetailsAsync(int userId)
 		{
-			var response = new ServiceResponse<List<CartProductResponseDTO>>
+			var response = new ServiceResponse<CartDetailDTO>
 			{
-				Data = new List<CartProductResponseDTO>()
+				Data = new CartDetailDTO
+				{
+					Products = new List<CartProductResponseDTO>()
+				}
 			};
 
-			if (cartItemsDTO == null || !cartItemsDTO.Any())
+			var cart = await _context.Carts
+				.Include(c => c.CartItems)
+					.ThenInclude(ci => ci.ProductVariant)
+						.ThenInclude(pv => pv.Product)
+				.Include(c => c.CartItems)
+					.ThenInclude(ci => ci.ProductVariant)
+						.ThenInclude(pv => pv.ProductType)
+				.FirstOrDefaultAsync(c => c.UserId == userId);
+
+			if (cart == null)
 			{
-				response.Message = "Cart items are required.";
+				response.Message = "Cart not found.";
 				response.Success = false;
 				return response;
 			}
 
-			var productVariantIds = cartItemsDTO.Select(dto => dto.ProductVariantId).Distinct();
-			var productVariants = await _context.ProductVariants
-				.Include(v => v.Product)
-				.Include(v => v.ProductType)
-				.Where(v => productVariantIds.Contains(v.ProductVariantId))
-				.ToListAsync();
-
-			foreach (var productVariant in productVariants)
+			foreach (var cartItem in cart.CartItems)
 			{
-				Console.WriteLine($"Fetched ProductVariant: ProductVariantId={productVariant.ProductVariantId}, ProductId={productVariant.ProductId}");
+				var productVariant = cartItem.ProductVariant;
 
-				if (productVariant.Product == null || productVariant.ProductType == null)
+				if (productVariant == null || productVariant.Product == null || productVariant.ProductType == null)
 				{
-					Console.Error.WriteLine($"Error: Product or ProductType is null for ProductVariantId: {productVariant.ProductVariantId}");
 					continue;
 				}
 
 				var cartProduct = new CartProductResponseDTO
 				{
-					CartItemId = cartItemsDTO.FirstOrDefault(dto => dto.ProductVariantId == productVariant.ProductVariantId)?.ProductVariantId ?? 0,
-					ProductId = productVariant.ProductId,
+					CartItemId = cartItem.Id,
+					ProductId = productVariant.Product.Id,
 					Title = productVariant.Product.Title,
 					ImageUrl = productVariant.Product.ImageUrl,
 					Price = productVariant.Price,
 					ProductType = productVariant.ProductType.Name,
 					ProductTypeId = productVariant.ProductTypeId,
-					Quantity = cartItemsDTO.FirstOrDefault(dto => dto.ProductVariantId == productVariant.ProductVariantId)?.Quantity ?? 0,
+					Quantity = cartItem.Quantity,
 					ProductVariantId = productVariant.ProductVariantId
 				};
 
-				Console.WriteLine($"Creating CartProductResponseDTO: CartItemId={cartProduct.CartItemId}, ProductId={cartProduct.ProductId}");
-
-				response.Data.Add(cartProduct);
+				response.Data.Products.Add(cartProduct);
 			}
 
-			response.Success = response.Data.Any();
+			response.Success = response.Data.Products.Any();
 			if (!response.Success)
 			{
 				response.Message = "No valid products found.";

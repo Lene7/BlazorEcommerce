@@ -73,65 +73,53 @@ namespace BlazorEccomerce.Server.Controllers
 			return Ok();
 		}
 
-		[HttpGet("items/{userId}")]
-        public async Task<ActionResult<ServiceResponse<List<CartItemDTO>>>> GetCartItems(int userId)
-        {
-            var result = await _cartService.GetCartIdForUserAsync(userId);
-            if (result.Success)
-            {
-                // Fetch cart items using the cart ID
-                var cartItems = await _context.CartItems
-                    .Where(ci => ci.CartId == result.Data)
-					.Include(ci => ci.ProductVariant)
-			        .ThenInclude(pv => pv.Product)
-			        .Include(ci => ci.ProductVariant)
-			        .ThenInclude(pv => pv.ProductType)
-					.ToListAsync();
+		[HttpGet("details/{userId}")]
+		public async Task<ActionResult<ServiceResponse<CartDetailDTO>>> GetCartDetails(int userId)
+		{
+			var response = new ServiceResponse<CartDetailDTO>();
+			var cartIdResult = await _cartService.GetCartIdForUserAsync(userId);
 
-                var cartItemDTOs = cartItems.Select(ci => new CartItemDTO
-                {
-                    ProductVariantId = ci.ProductVariantId,
+			if (!cartIdResult.Success)
+			{
+				return NotFound(cartIdResult.Message);
+			}
+
+			var cartItems = await _context.CartItems
+				.Where(ci => ci.CartId == cartIdResult.Data)
+				.Include(ci => ci.ProductVariant)
+				.ThenInclude(pv => pv.Product)
+				.Include(ci => ci.ProductVariant)
+				.ThenInclude(pv => pv.ProductType)
+				.ToListAsync();
+
+			var cartDetail = new CartDetailDTO
+			{
+				Items = cartItems.Select(ci => new CartItemDTO
+				{
+					ProductVariantId = ci.ProductVariantId,
 					ProductId = ci.ProductId,
 					ProductTypeId = ci.ProductVariant?.ProductTypeId ?? default,
 					Quantity = ci.Quantity,
-                    Price = ci.Price
-                }).ToList();
+					Price = ci.Price
+				}).ToList(),
+				Products = cartItems.Select(item => new CartProductResponseDTO
+				{
+					CartItemId = item.Id,
+					ProductId = item.ProductId,
+					Title = item.ProductVariant.Product.Title,
+					ProductType = item.ProductVariant.ProductType.Name,
+					ImageUrl = item.ProductVariant.Product.ImageUrl,
+					Price = item.Price,
+					Quantity = item.Quantity,
+					ProductVariantId = item.ProductVariantId
+				}).ToList()
+			};
 
-                return Ok(new ServiceResponse<List<CartItemDTO>> { Data = cartItemDTOs });
-            }
-            return NotFound(result.Message);
-        }
+			response.Data = cartDetail;
+			response.Success = true;
 
-        [HttpGet("products/{userId}")]
-        public async Task<ActionResult<ServiceResponse<List<CartProductResponseDTO>>>> GetCartProducts(int userId)
-        {
-            var cartIdResult = await _cartService.GetCartIdForUserAsync(userId);
-
-            if (!cartIdResult.Success)
-            {
-                return NotFound("Cart not found");
-            }
-
-            var cartItems = await _context.CartItems
-                .Where(ci => ci.CartId == cartIdResult.Data)
-                .Include(ci => ci.ProductVariant)
-                .ThenInclude(pv => pv.Product)
-                .Include(ci => ci.ProductVariant)
-                .ThenInclude(pv => pv.ProductType)
-                .ToListAsync();
-
-            var cartProductResponse = cartItems.Select(item => new CartProductResponseDTO
-            {
-                ProductId = item.ProductId,
-                Title = item.ProductVariant.Product.Title,
-                ProductType = item.ProductVariant.ProductType.Name,
-                ImageUrl = item.ProductVariant.Product.ImageUrl,
-                Price = item.Price,
-                Quantity = item.Quantity
-            }).ToList();
-
-            return Ok(new ServiceResponse<List<CartProductResponseDTO>> { Data = cartProductResponse });
-        }
+			return Ok(response);
+		}
 
 		[HttpPut("update/{userId}")]
 		public async Task<IActionResult> UpdateCartForUserAsync(int userId, [FromBody] List<CartItemDTO> cartItemsDTO)

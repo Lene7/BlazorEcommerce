@@ -2,7 +2,7 @@
 {
 	public interface ICartService
 	{
-		Task<ServiceResponse<List<CartProductResponseDTO>>> GetCartProducts(List<BlazorEccomerce.Shared.CartItemDTO> cartItemsDTO);
+		Task<ServiceResponse<CartDetailDTO>> GetCartDetailsAsync(int userId);
 		Task<ServiceResponse<List<CartProductResponseDTO>>> GetCartForUserAsync(int userId);
 		Task<ServiceResponse<bool>> UpdateCartForUserAsync(int userId, List<BlazorEccomerce.Shared.CartItemDTO> cartItemsDTO);
 		Task<ServiceResponse<bool>> AddToCartAsync(int userId, CartItemDTO cartItemDTO);
