@@ -43,6 +43,7 @@ namespace BlazorEccomerce.Client.Services.CartService
 					var response = await _http.PostAsJsonAsync($"api/cart/add/{userId}", cartItem);
 					response.EnsureSuccessStatusCode();
 				}
+				OnChange?.Invoke();
 			}
 			catch (Exception ex)
 			{
@@ -101,7 +102,7 @@ namespace BlazorEccomerce.Client.Services.CartService
 			}
 		}
 
-		public async Task RemoveProductFromCart(int cartItemId)
+		public async Task RemoveProductFromCart(int productVariantId)
 		{
 			try
 			{
@@ -113,8 +114,11 @@ namespace BlazorEccomerce.Client.Services.CartService
 					throw new Exception("User not authenticated");
 				}
 
-				var response = await _http.DeleteAsync($"api/cart/delete/{userId}/{cartItemId}");
+				Console.WriteLine($"Attempting to remove item with ProductVariantId: {productVariantId}");
+				var url = $"api/cart/delete/{userId}/{productVariantId}";
+				var response = await _http.DeleteAsync(url);
 				response.EnsureSuccessStatusCode();
+				OnChange?.Invoke();
 			}
 			catch (Exception ex)
 			{

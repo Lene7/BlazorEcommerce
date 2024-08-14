@@ -35,37 +35,32 @@ namespace BlazorEccomerce.Server.Services.CartService
 				.Where(v => productVariantIds.Contains(v.ProductVariantId))
 				.ToListAsync();
 
-			foreach (var dto in cartItemsDTO)
+			foreach (var productVariant in productVariants)
 			{
-				var productVariant = productVariants
-					.FirstOrDefault(v => v.ProductVariantId == dto.ProductVariantId);
+				Console.WriteLine($"Fetched ProductVariant: ProductVariantId={productVariant.ProductVariantId}, ProductId={productVariant.ProductId}");
 
-				if (productVariant != null)
+				if (productVariant.Product == null || productVariant.ProductType == null)
 				{
-					if (productVariant.Product != null && productVariant.ProductType != null)
-					{
-						var cartProduct = new CartProductResponseDTO
-						{
-							ProductId = productVariant.ProductId,
-							Title = productVariant.Product.Title,
-							ImageUrl = productVariant.Product.ImageUrl,
-							Price = productVariant.Price,
-							ProductType = productVariant.ProductType.Name,
-							ProductTypeId = productVariant.ProductTypeId,
-							Quantity = dto.Quantity
-						};
+					Console.Error.WriteLine($"Error: Product or ProductType is null for ProductVariantId: {productVariant.ProductVariantId}");
+					continue;
+				}
 
-						response.Data.Add(cartProduct);
-					}
-					else
-					{
-						Console.Error.WriteLine("Product or ProductType is null.");
-					}
-				}
-				else
+				var cartProduct = new CartProductResponseDTO
 				{
-					Console.Error.WriteLine("ProductVariant is null.");
-				}
+					CartItemId = cartItemsDTO.FirstOrDefault(dto => dto.ProductVariantId == productVariant.ProductVariantId)?.ProductVariantId ?? 0,
+					ProductId = productVariant.ProductId,
+					Title = productVariant.Product.Title,
+					ImageUrl = productVariant.Product.ImageUrl,
+					Price = productVariant.Price,
+					ProductType = productVariant.ProductType.Name,
+					ProductTypeId = productVariant.ProductTypeId,
+					Quantity = cartItemsDTO.FirstOrDefault(dto => dto.ProductVariantId == productVariant.ProductVariantId)?.Quantity ?? 0,
+					ProductVariantId = productVariant.ProductVariantId
+				};
+
+				Console.WriteLine($"Creating CartProductResponseDTO: CartItemId={cartProduct.CartItemId}, ProductId={cartProduct.ProductId}");
+
+				response.Data.Add(cartProduct);
 			}
 
 			response.Success = response.Data.Any();
@@ -87,7 +82,7 @@ namespace BlazorEccomerce.Server.Services.CartService
             // Fetch cart items for the user including related ProductVariant, Product, and ProductType
             var cartItems = await _context.CartItems
                 .Include(ci => ci.ProductVariant)
-                .ThenInclude(pv => pv.ProductId)
+                .ThenInclude(pv => pv.Product)
                 .Include(ci => ci.ProductVariant)
                 .ThenInclude(pv => pv.ProductType)
                 .Where(ci => ci.Cart.UserId == userId)
@@ -99,17 +94,34 @@ namespace BlazorEccomerce.Server.Services.CartService
                 .Distinct()
                 .ToList();
 
-            foreach (var item in cartItems)
-            {
-                var productVariant = productVariants
-                    .FirstOrDefault(v => v.ProductId == item.ProductVariant.ProductId && v.ProductTypeId == item.ProductVariant.ProductTypeId);
+			Console.WriteLine("Fetched cart items:");
+			foreach (var item in cartItems)
+			{
+				Console.WriteLine($"CartItemId: {item.Id}, ProductId: {item.ProductVariant?.Product?.Id}, ProductVariantId: {item.ProductVariant?.ProductVariantId}");
+			}
 
-                if (productVariant != null && productVariant.Product != null && productVariant.ProductType != null)
-                {
+			foreach (var item in cartItems)
+            {
+                var productVariant = item.ProductVariant;
+
+				if (productVariant == null)
+				{
+					Console.Error.WriteLine($"ProductVariant is null for CartItemId: {item.Id}");
+				}
+				else if (productVariant.Product == null)
+				{
+					Console.Error.WriteLine($"Product is null for ProductVariantId: {productVariant.ProductVariantId}");
+				}
+				else if (productVariant.ProductType == null)
+				{
+					Console.Error.WriteLine($"ProductType is null for ProductTypeId: {productVariant.ProductTypeId}");
+				}
+				else
+				{
 					var cartProduct = new CartProductResponseDTO
 					{
 						CartItemId = item.Id,
-						ProductId = productVariant.ProductId,
+						ProductId = productVariant.Product.Id,
 						Title = productVariant.Product.Title,
 						ImageUrl = productVariant.Product.ImageUrl,
 						Price = productVariant.Price,
@@ -121,7 +133,7 @@ namespace BlazorEccomerce.Server.Services.CartService
 
                     response.Data.Add(cartProduct);
                 }
-            }
+			}
 
             response.Success = response.Data.Any();
             if (!response.Success)
@@ -248,10 +260,10 @@ namespace BlazorEccomerce.Server.Services.CartService
 			return response;
 		}
 
-		public async Task<ServiceResponse<bool>> RemoveProductFromCartAsync(int userId, int cartItemId)
+		public async Task<ServiceResponse<bool>> RemoveProductFromCartAsync(int userId, int productVariantId)
 		{
 			var response = new ServiceResponse<bool> { Data = false };
-			Console.WriteLine($"Removing item. UserId: {userId}, CartItemId: {cartItemId}");
+			
 			var cart = await _context.Carts
 				.Include(c => c.CartItems)
 				.FirstOrDefaultAsync(c => c.UserId == userId);
@@ -262,17 +274,17 @@ namespace BlazorEccomerce.Server.Services.CartService
 				return response;
 			}
 
-			var itemToRemove = cart.CartItems
-				.FirstOrDefault(ci => ci.Id == cartItemId); 
+			var itemsToRemove = cart.CartItems
+				.Where(ci => ci.ProductVariantId ==  productVariantId)
+				.ToList();
 
-			if (itemToRemove == null)
+			if (!itemsToRemove.Any())
 			{
-				response.Message = $"Item with Id {cartItemId} not found in cart.";
-				Console.WriteLine(response.Message);
+				response.Message = $"No items found with ProductVariantId {productVariantId}";
 				return response;
 			}
 
-			_context.CartItems.Remove(itemToRemove);
+			_context.CartItems.RemoveRange(itemsToRemove);
 			await _context.SaveChangesAsync();
 			response.Data = true;
 

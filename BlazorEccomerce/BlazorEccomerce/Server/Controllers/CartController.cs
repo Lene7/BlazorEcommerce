@@ -155,12 +155,12 @@ namespace BlazorEccomerce.Server.Controllers
 			}
 		}
 
-		[HttpDelete("delete/{userId}/{cartItemId}")]
-		public async Task<IActionResult> DeleteCartItemAsync(int userId, int cartItemId)
+		[HttpDelete("delete/{userId}/{productVariantId}")]
+		public async Task<IActionResult> DeleteCartItemAsync(int userId, int productVariantId)
 		{
 			try
 			{
-				var result = await _cartService.RemoveProductFromCartAsync(userId, cartItemId); // Pass userId
+				var result = await _cartService.RemoveProductFromCartAsync(userId, productVariantId); // Pass userId
 				if (result.Data)
 				{
 					return Ok();
