@@ -11,6 +11,7 @@
 
 @code {
     private int cartItemsCount = 0;
+    private string message = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -29,12 +30,13 @@
             }
             else
             {
-                Console.Error.WriteLine($"Error fetching cart details: {response.Message}");
+                message = response.Message ?? "An error occurred while fetching your cart details.";
                 cartItemsCount = 0;
             }
         }
         catch (Exception ex)
         {
+            message = "An error occurred while fetching your cart items count.";
             Console.Error.WriteLine($"Error fetching cart items count: {ex.Message}");
             cartItemsCount = 0;
         }

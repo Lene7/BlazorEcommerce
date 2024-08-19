@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace BlazorEccomerce.Server.Controllers
@@ -78,7 +79,6 @@ namespace BlazorEccomerce.Server.Controllers
 		{
 			var response = new ServiceResponse<CartDetailDTO>();
 			var cartIdResult = await _cartService.GetCartIdForUserAsync(userId);
-
 			if (!cartIdResult.Success)
 			{
 				return NotFound(cartIdResult.Message);

@@ -58,13 +58,23 @@ else
     {
         try
         {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                message = "Please log in to access your cart.";
+                return;
+            }
+
             Console.WriteLine($"Attempting to remove item with ProductVariantId: {productVariantId}");
             await CartService.RemoveProductFromCart(productVariantId);
             await LoadCart();
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error removing product from cart: {ex.Message}");
+            //Console.Error.WriteLine($"Error removing product from cart: {ex.Message}");
+            message = "An error occurred while removing the product.";
         }
     }
 
@@ -77,7 +87,9 @@ else
 
             if (string.IsNullOrEmpty(userId))
             {
-                throw new Exception("User not authenticated");
+                message = "Please log in to view your cart";
+                cartDetail = null;
+                return;
             }
 
             var response = await CartService.GetCartDetails();
@@ -96,7 +108,7 @@ else
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error loading cart: {ex.Message}");
+            //Console.Error.WriteLine($"Error loading cart: {ex.Message}");
             message = "An error occurred while loading the cart.";
         }
     }
@@ -110,7 +122,8 @@ else
 
             if (string.IsNullOrEmpty(userId))
             {
-                throw new Exception("User not authenticated");
+                message = "Please log in to update your cart.";
+                return;
             }
 
             product.Quantity = int.Parse(e.Value.ToString());
@@ -131,6 +144,7 @@ else
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error updating quantity: {ex.Message}");
+            message = "An error occurred while updating the quantity.";
         }
     }
 }

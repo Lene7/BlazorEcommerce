@@ -1,6 +1,9 @@
 ﻿@page "/product/{id:int}"
+@using System.Security.Claims
 @inject IProductService ProductService
 @inject ICartService CartService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
 
 @if(product == null)
 {
@@ -80,6 +83,15 @@ else
 
 	private async Task AddToCart()
 	{
+		var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+		var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+		if (string.IsNullOrEmpty(userId))
+		{
+			NavigationManager.NavigateTo("/login");
+			return;
+		}
+
 		var productVariant = GetSelectedVariant();
 		if (productVariant != null)
 		{

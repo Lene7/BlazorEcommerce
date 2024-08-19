@@ -27,19 +27,46 @@ namespace BlazorEccomerce.Client.Services.CartService
 
 				if (string.IsNullOrEmpty(userId))
 				{
-					throw new Exception("User not authenticated");
+					return new ServiceResponse<CartDetailDTO>
+					{
+						Success = false,
+						Message = "Please log in to view your cart."
+					};
 				}
 
 				var response = await _http.GetAsync($"api/cart/details/{userId}");
+				if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+				{
+					return new ServiceResponse<CartDetailDTO>
+					{
+						Success = false,
+						Message = "User not authenticated."
+					};
+				}
 				response.EnsureSuccessStatusCode();
 
 				var result = await response.Content.ReadFromJsonAsync<ServiceResponse<CartDetailDTO>>();
 				return result;
 			}
+			catch (HttpRequestException httpEx)
+			{
+				// Specific handling for HTTP request errors
+				//Console.Error.WriteLine($"HTTP request error fetching cart details: {httpEx.Message}");
+				return new ServiceResponse<CartDetailDTO>
+				{
+					Success = false,
+					Message = "An error occurred while fetching cart details."
+				};
+			}
 			catch (Exception ex)
 			{
-				Console.Error.WriteLine($"Error fetching cart details: {ex.Message}");
-				return new ServiceResponse<CartDetailDTO> { Success = false, Message = ex.Message };
+				// General exception handling
+				//Console.Error.WriteLine($"Error fetching cart details: {ex.Message}");
+				return new ServiceResponse<CartDetailDTO>
+				{
+					Success = false,
+					Message = "An error occurred while fetching cart details."
+				};
 			}
 		}
 
