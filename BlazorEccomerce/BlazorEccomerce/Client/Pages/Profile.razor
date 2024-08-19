@@ -1,9 +1,68 @@
 ﻿@page "/profile"
+@inject IAuthService AuthService
+@inject AuthenticationStateProvider AuthStateProvider
+@using System.Security.Claims
 
 <AuthorizeView>
+<ChildContent>
 	<h3>Hi! You're logged in with <i>@context.User.Identity.Name</i>.</h3>
+	<h4>Change Password</h4>
+	<EditForm Model="passwordModel" OnValidSubmit="ChangePassword">
+	<ChildContent Context="formContext">
+		<DataAnnotationsValidator />
+		<div class="mb-3">
+			<label for="currentPassword">Current Password</label>
+			<InputText id="currentPassword" @bind-Value="passwordModel.CurrentPassword" class="form-control" type="password" />
+			<ValidationMessage For="@(() => passwordModel.CurrentPassword)" />
+		</div>
+		<div class="mb-3">
+			<label for="newtPassword">New Password</label>
+			<InputText id="newPassword" @bind-Value="passwordModel.NewPassword" class="form-control" type="password" />
+			<ValidationMessage For="@(() => passwordModel.NewPassword)" />
+		</div>
+		<div class="mb-3">
+			<label for="confirmNewPassword">Confirm New Password</label>
+			<InputText id="confirmNewPassword" @bind-Value="passwordModel.ConfirmNewPassword" class="form-control" type="password" />
+			<ValidationMessage For="@(() => passwordModel.ConfirmNewPassword)" />
+		</div>
+		<button type="submit" class="btn btn-primary">Change Password</button>
+	</ChildContent>
+	</EditForm>
+	<div class="text-danger">
+		<span>@errorMessage</span>
+		</div>
+</ChildContent>
 </AuthorizeView>
 
 @code {
+	private UserChangePassword passwordModel = new UserChangePassword();
+	private string errorMessage = string.Empty;
 
+	private async Task ChangePassword()
+	{
+		try
+		{
+			var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+			var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+			if (string.IsNullOrEmpty(userId))
+			{
+				throw new Exception("User not authenticated");
+			}
+
+			var result = await AuthService.ChangePassword(userId, passwordModel.CurrentPassword, passwordModel.NewPassword);
+			if (result.Success)
+			{
+				errorMessage = "Password changed successfully.";
+			}
+			else
+			{
+				errorMessage = result.Message;
+			}
+		}
+		catch (Exception ex)
+		{
+			errorMessage = $"Error: {ex.Message}";
+		}
+	}
 }

@@ -110,5 +110,36 @@ namespace BlazorEccomerce.Server.Services.AuthService
 
 			return jwt;
 		}
+
+		public async Task<ServiceResponse<bool>> ChangePassword(string userId, string currentPassword, string newPassword)
+		{
+			var response = new ServiceResponse<bool>();
+
+			var user = await _context.Users.FindAsync(int.Parse(userId));
+			if (user == null)
+			{
+				response.Success = false;
+				response.Message = "User not found.";
+				return response;
+			}
+
+			if (!VerifyPasswordHash(currentPassword, user.PasswordHash, user.PasswordSalt))
+			{
+				response.Success = false;
+				response.Message = "Current password is incorrect.";
+				return response;
+			}
+
+			CreatePasswordHash(newPassword, out byte[] newHash, out byte[] newSalt);
+			user.PasswordHash = newHash;
+			user.PasswordSalt = newSalt;
+
+			_context.Users.Update(user);
+			await _context.SaveChangesAsync();
+
+			response.Data = true;
+			response.Message = "Password changed successfully.";
+			return response;
+		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace BlazorEccomerce.Server.Controllers
 {
@@ -42,5 +43,20 @@ namespace BlazorEccomerce.Server.Controllers
 
 			return response;
 		}
-    }
+
+		[HttpPost("change-password/{userId}")]
+		public async Task<ActionResult<ServiceResponse<bool>>> ChangePassword(string userId, UserChangePassword request)
+		{
+			var result = await _authService.ChangePassword(userId, request.CurrentPassword, request.NewPassword);
+
+			if (result.Success)
+			{
+				return Ok(result);
+			}
+			else
+			{
+				return BadRequest(result.Message);
+			}
+		}
+	}
 }

@@ -10,6 +10,20 @@ namespace BlazorEccomerce.Client.Services.AuthService
 			_http = http;
         }
 
+		public async Task<ServiceResponse<bool>> ChangePassword(string userId, string currentPassword, string newPassword)
+		{
+			var request = new UserChangePassword
+			{
+				CurrentPassword = currentPassword,
+				NewPassword = newPassword,
+				ConfirmNewPassword = newPassword 
+			};
+
+			var response = await _http.PostAsJsonAsync($"api/auth/change-password/{userId}", request);
+
+			return await response.Content.ReadFromJsonAsync<ServiceResponse<bool>>();
+		}
+
 		public async Task<ServiceResponse<string>> Login(UserLogin request)
 		{
 			var result = await _http.PostAsJsonAsync("api/auth/login", request);
