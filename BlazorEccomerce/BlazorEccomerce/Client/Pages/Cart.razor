@@ -1,7 +1,9 @@
 ﻿@page "/cart"
 @inject ICartService CartService
+@inject IOrderService OrderService
 @inject AuthenticationStateProvider AuthStateProvider
 @using System.Security.Claims
+@using System.Text.Json
 
 <PageTitle>Shopping Cart</PageTitle>
 
@@ -10,6 +12,10 @@
 @if (cartDetail == null)
 {
     <span>@message</span>
+}
+else if (orderPlaced)
+{
+    <span>Thank you for your order! You can check your orders <a href="orders">here</a>.</span>
 }
 else
 {
@@ -37,6 +43,7 @@ else
             <div class="cart-product-price">
                 Total (@cartDetail.Products.Count): R @cartDetail.Products.Sum(p => p.Price * p.Quantity)
             </div>
+            <button @onclick="PlaceOrder" class="btn btn-success float-end mt-1">Place Order</button>
         }
         else
         {
@@ -49,8 +56,11 @@ else
     private CartDetailDTO cartDetail;
     private string message = "Loading cart";
 
+    bool orderPlaced = false;
+
     protected override async Task OnInitializedAsync()
     {
+        orderPlaced = false;
         await LoadCart();
     }
 
@@ -146,5 +156,11 @@ else
             Console.Error.WriteLine($"Error updating quantity: {ex.Message}");
             message = "An error occurred while updating the quantity.";
         }
+    }
+
+    private async Task PlaceOrder()
+    {
+        await OrderService.PlaceOrder();
+        orderPlaced = true;
     }
 }

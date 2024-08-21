@@ -5,6 +5,7 @@ global using BlazorEccomerce.Server.Services.ProductService;
 global using BlazorEccomerce.Server.Services.CategoryService;
 global using BlazorEccomerce.Server.Services.CartService;
 global using BlazorEccomerce.Server.Services.AuthService;
+global using BlazorEccomerce.Server.Services.OrderService;
 using Microsoft.AspNetCore.ResponseCompression;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +27,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 var app = builder.Build();
 

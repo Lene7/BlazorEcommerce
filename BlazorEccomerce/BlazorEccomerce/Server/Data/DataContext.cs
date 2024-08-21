@@ -12,6 +12,9 @@
 			modelBuilder.Entity<ProductVariant>()
 				.HasKey(pv => pv.ProductVariantId);
 
+			modelBuilder.Entity<OrderItem>()
+				.HasKey(oi => new {oi.OrderId, oi.ProductVariantId });
+
 			modelBuilder.Entity<ProductType>().HasData(
 					new ProductType { Id = 1, Name = "Sunrise"},
 					new ProductType { Id = 2, Name = "Midday" },
@@ -163,5 +166,7 @@
 		public DbSet<User> Users { get; set; }
 		public DbSet<Cart> Carts { get; set; }
 		public DbSet<CartItem> CartItems { get; set; }
+		public DbSet<Order> Orders { get; set; }
+		public DbSet<OrderItem> OrderItems { get; set; }
 	}
 }

@@ -70,7 +70,7 @@ namespace BlazorEccomerce.Server.Services.CartService
 				response.Message = "No valid products found.";
 			}
 
-			return response;
+            return response;
 		}
 
 		public async Task<ServiceResponse<List<CartProductResponseDTO>>> GetCartForUserAsync(int userId)
