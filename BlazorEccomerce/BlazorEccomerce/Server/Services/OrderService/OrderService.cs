@@ -14,6 +14,50 @@ namespace BlazorEccomerce.Server.Services.OrderService
 			_cartService = cartService;
         }
 
+        public async Task<ServiceResponse<List<OrderOverviewResponseDTO>>> GetOrders(int userId)
+        {
+            var response = new ServiceResponse<List<OrderOverviewResponseDTO>>();
+
+            try
+            {
+                var orders = await _context.Orders
+                    .Where(o => o.UserId == userId)
+                    .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                    .ThenInclude(pv  => pv.Product)
+                    .OrderByDescending(o => o.OrderDate)
+                    .ToListAsync();
+
+                if (orders == null || !orders.Any())
+                {
+                    response.Success = false;
+                    response.Message = "No orders found.";
+                    return response;
+                }
+
+                var orderDTOs = orders.Select(order => new OrderOverviewResponseDTO
+                {
+                    Id = order.Id,
+                    OrderDate = order.OrderDate,
+                    TotalPrice = order.TotalPrice,
+                    ProductVariantId = order.OrderItems.First().ProductVariantId,
+                    ProductImageUrl = order.OrderItems.First().ProductVariant.Product.ImageUrl,
+                    ProductSummary = order.OrderItems.Count > 1
+                        ? $"{ order.OrderItems.First().ProductVariant.Product.Title} and {order.OrderItems.Count - 1} more..."
+                        : order.OrderItems.First().ProductVariant.Product.Title
+                }).ToList();
+
+                response.Data = orderDTOs;
+                response.Success = true;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Error retrieving orders: {ex.Message}";
+            }
+            return response;
+        }
+
         public async Task<ServiceResponse<bool>> PlaceOrder(int userId)
 		{
             var response = new ServiceResponse<bool>();

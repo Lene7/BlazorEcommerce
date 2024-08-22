@@ -20,5 +20,16 @@ namespace BlazorEccomerce.Server.Controllers
 			var result = await _orderService.PlaceOrder(userId);
 			return Ok(result);
 		}
+
+		[HttpGet("{userId}")]
+		public async Task<ActionResult<ServiceResponse<List<OrderOverviewResponseDTO>>>> GetOrders(int userId)
+		{
+			var result = await _orderService.GetOrders(userId);
+			if (!result.Success)
+			{
+				return BadRequest(result.Message);
+			}
+			return Ok(result);
+		}
     }
 }

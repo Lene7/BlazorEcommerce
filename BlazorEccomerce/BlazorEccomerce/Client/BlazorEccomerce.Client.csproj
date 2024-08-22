@@ -24,11 +24,16 @@
 
   <ItemGroup>
     <_ContentIncludedByDefault Remove="Pages\Login.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Orders.razor" />
     <_ContentIncludedByDefault Remove="Pages\Register.razor" />
   </ItemGroup>
 
   <ItemGroup>
     <UpToDateCheckInput Remove="Pages\Login.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Orders.razor" />
   </ItemGroup>
 
 </Project>

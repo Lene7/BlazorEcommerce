@@ -12,6 +12,8 @@
 		<AuthorizeView>
 			<Authorized>
 				<button class="dropdown-item" @onclick="NavigateToProfile">Profile</button>
+				<button class="dropdown-item" @onclick="NavigateToOrders">Orders</button>
+				<hr />
 				<button class="dropdown-item" @onclick="Logout">Logout</button>
 			</Authorized>
 			<NotAuthorized>
@@ -48,5 +50,10 @@
 	private void NavigateToProfile()
 	{
 		NavigationManager.NavigateTo("/profile");
+	}
+
+	private void NavigateToOrders()
+	{
+		NavigationManager.NavigateTo("/orders");
 	}
 }
