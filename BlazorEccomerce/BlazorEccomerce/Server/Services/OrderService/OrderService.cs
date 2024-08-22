@@ -1,4 +1,5 @@
 ﻿
+using BlazorEccomerce.Server.Migrations;
 using System.Text.Json;
 
 namespace BlazorEccomerce.Server.Services.OrderService
@@ -14,7 +15,68 @@ namespace BlazorEccomerce.Server.Services.OrderService
 			_cartService = cartService;
         }
 
-        public async Task<ServiceResponse<List<OrderOverviewResponseDTO>>> GetOrders(int userId)
+        public async Task<ServiceResponse<OrderDetailsResponseDTO>> GetOrderDetails(int userId, int orderId)
+        {
+            var response = new ServiceResponse<OrderDetailsResponseDTO>
+            {
+                Data = new OrderDetailsResponseDTO
+                {
+                    Products = new List<OrderDetailsProductResponseDTO>()
+                }
+            };
+
+            var order = await _context.Orders
+                .Where(o => o.Id == orderId && o.UserId == userId)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                        .ThenInclude(pv => pv.Product)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                        .ThenInclude(pv => pv.ProductType)
+                .FirstOrDefaultAsync();
+
+            if (order == null)
+            {
+                response.Message = "Order not found.";
+                response.Success = false;
+                return response;
+            }
+
+            response.Data.OrderDate = order.OrderDate; 
+            response.Data.TotalPrice = order.TotalPrice;
+
+            foreach (var orderItem in order.OrderItems)
+            {
+                var productVariant = orderItem.ProductVariant;
+
+                if (productVariant == null || productVariant.Product == null || productVariant.ProductType == null)
+                {
+                    continue;
+                }
+
+                var orderProduct = new OrderDetailsProductResponseDTO
+                {
+                    ProductVariantId = productVariant.ProductVariantId,
+                    ProductTitle = productVariant.Product.Title,
+                    ProductTypeName = productVariant.ProductType.Name,
+                    ProductImageURL = productVariant.Product.ImageUrl,
+                    Quantity = orderItem.Quantity,
+                    TotalPrice = orderItem.TotalPrice
+                };
+
+                response.Data.Products.Add(orderProduct);
+            }
+
+            response.Success = response.Data.Products.Any();
+            if (!response.Success)
+            {
+                response.Message = "No products found.";
+            }
+
+            return response;
+        }
+
+			public async Task<ServiceResponse<List<OrderOverviewResponseDTO>>> GetOrders(int userId)
         {
             var response = new ServiceResponse<List<OrderOverviewResponseDTO>>();
 

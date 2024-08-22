@@ -1,0 +1,71 @@
+﻿@page "/orderdetails/{orderId:int}"
+@inject IOrderService OrderService
+@inject AuthenticationStateProvider AuthStateProvider
+@using System.Security.Claims
+
+<h3>Order Details</h3>
+
+@if (orderDetails == null)
+{
+    <span>Loading order...</span>
+}
+else
+{
+    <h3>Order from @orderDetails.OrderDate.ToString("MMMM dd, yyyy")</h3>
+
+    <div>
+        @foreach (var product in orderDetails.Products)
+        {
+            <div class="container">
+                <div class="image-wrapper">
+                    <img src="@product.ProductImageURL" class="image" />
+                </div>
+                <div class="name">
+                    <h5>@product.ProductTitle</h5>
+                    <span>@product.ProductTypeName</span><br />
+                    <span>Quantity: @product.Quantity</span>
+                </div>
+                <div class="product-price">R @product.TotalPrice</div>
+            </div>
+        }
+        <div class="product-price">Total: R @orderDetails.TotalPrice</div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int OrderId { get; set; }
+    private OrderDetailsResponseDTO orderDetails;
+    private string message = "Loading order details";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                message = "Please log in to access your orders.";
+                return;
+            }
+
+            var userIdInt = int.Parse(userId);
+            var response = await OrderService.GetOrderDetails(userIdInt, OrderId);
+
+            if (response == null || response.Products == null)
+            {
+                message = "No order details found.";
+            }
+            else
+            {
+                orderDetails = response;
+            }
+        }
+        catch (Exception ex)
+        {
+            message = "An error occurred while viewing order details.";
+        }
+	}
+}

@@ -17,7 +17,13 @@ namespace BlazorEccomerce.Client.Services.OrderService
 			_navigationManager = navigationManager;
         }
 
-        public async Task<List<OrderOverviewResponseDTO>> GetOrders()
+		public async Task<OrderDetailsResponseDTO> GetOrderDetails(int userId, int orderId)
+		{
+			var result = await _httpClient.GetFromJsonAsync<ServiceResponse<OrderDetailsResponseDTO>>($"api/order/details/{userId}/{orderId}");
+			return result.Data;
+		}
+
+		public async Task<List<OrderOverviewResponseDTO>> GetOrders()
         {
             var authState = await _authStateProvider.GetAuthenticationStateAsync();
             var userIdClaim = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier);
