@@ -4,6 +4,7 @@ using BlazorEccomerce.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlazorEccomerce.Server.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240921181212_UserRole")]
+    partial class UserRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -81,9 +83,6 @@ namespace BlazorEccomerce.Server.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -91,9 +90,6 @@ namespace BlazorEccomerce.Server.Migrations
                     b.Property<string>("Url")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Visible")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -103,26 +99,20 @@ namespace BlazorEccomerce.Server.Migrations
                         new
                         {
                             Id = 1,
-                            Deleted = false,
                             Name = "Portrait Photoshoots",
-                            Url = "portrait-photoshoots",
-                            Visible = true
+                            Url = "portrait-photoshoots"
                         },
                         new
                         {
                             Id = 2,
-                            Deleted = false,
                             Name = "Couples Photoshoots",
-                            Url = "couples-photoshoots",
-                            Visible = true
+                            Url = "couples-photoshoots"
                         },
                         new
                         {
                             Id = 3,
-                            Deleted = false,
                             Name = "Live Photoshoots",
-                            Url = "live-photoshoots",
-                            Visible = true
+                            Url = "live-photoshoots"
                         });
                 });
 
@@ -394,10 +384,6 @@ namespace BlazorEccomerce.Server.Migrations
                     b.Property<byte[]>("PasswordSalt")
                         .IsRequired()
                         .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
