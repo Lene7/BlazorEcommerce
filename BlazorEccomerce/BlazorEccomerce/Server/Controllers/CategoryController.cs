@@ -21,28 +21,28 @@ namespace BlazorEccomerce.Server.Controllers
 			return Ok(result);
 		}
 
-		[HttpGet("admin")/*, Authorize(Roles = "Admin")*/]
+		[HttpGet("admin"), Authorize(Roles = "Admin")]
 		public async Task<ActionResult<ServiceResponse<List<Category>>>> GetAdminCategories()
 		{
 			var result = await _categoryService.GetAdminCategories();
 			return Ok(result);
 		}
 
-		[HttpDelete("admin/{id}")/*, Authorize(Roles = "Admin")*/]
+		[HttpDelete("admin/{id}"), Authorize(Roles = "Admin")]
 		public async Task<ActionResult<ServiceResponse<List<Category>>>> DeleteCategory(int id)
 		{
 			var result = await _categoryService.DeleteCategory(id);
 			return Ok(result);
 		}
 
-		[HttpPost("admin")/*, Authorize(Roles = "Admin")*/]
+		[HttpPost("admin"), Authorize(Roles = "Admin")]
 		public async Task<ActionResult<ServiceResponse<List<Category>>>> AddCategory(Category category)
 		{
 			var result = await _categoryService.AddCategory(category);
 			return Ok(result);
 		}
 
-		[HttpPut("admin")/*, Authorize(Roles = "Admin")*/]
+		[HttpPut("admin"), Authorize(Roles = "Admin")]
 		public async Task<ActionResult<ServiceResponse<List<Category>>>> UpdateCategory(Category category)
 		{
 			var result = await _categoryService.UpdateCategory(category);

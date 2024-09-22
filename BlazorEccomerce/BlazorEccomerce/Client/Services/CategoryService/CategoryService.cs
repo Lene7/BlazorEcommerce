@@ -1,13 +1,18 @@
-﻿
+﻿using System.Net.Http.Headers;
+using Blazored.LocalStorage;
+
+
 namespace BlazorEccomerce.Client.Services.CategoryService
 {
 	public class CategoryService : ICategoryService
 	{
 		private readonly HttpClient _http;
+		private readonly ILocalStorageService _localStorage;
 
-		public CategoryService(HttpClient http)
+		public CategoryService(HttpClient http, ILocalStorageService localStorage)
         {
 			_http = http;
+			_localStorage = localStorage;
 		}
 
         public List<Category> Categories { get; set; } = new List<Category>();
@@ -48,6 +53,12 @@ namespace BlazorEccomerce.Client.Services.CategoryService
 
 		public async Task GetCategories()
 		{
+			var token = await _localStorage.GetItemAsync<string>("token"); 
+			if (!string.IsNullOrEmpty(token))
+			{
+				_http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+			}
+
 			var response = await _http.GetFromJsonAsync<ServiceResponse<List<Category>>>("api/category");
 			if (response != null && response.Data != null)
 				Categories = response.Data;

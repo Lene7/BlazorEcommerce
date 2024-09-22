@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <_ContentIncludedByDefault Remove="Pages\Admin\ProductTypes.razor" />
     <_ContentIncludedByDefault Remove="Pages\Login.razor" />
     <_ContentIncludedByDefault Remove="Pages\Orders.razor" />
     <_ContentIncludedByDefault Remove="Pages\Register.razor" />
@@ -34,6 +35,10 @@
 
   <ItemGroup>
     <UpToDateCheckInput Remove="Pages\Orders.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Admin\ProductTypes.razor" />
   </ItemGroup>
 
 </Project>
