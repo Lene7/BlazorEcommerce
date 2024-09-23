@@ -6,6 +6,7 @@ global using BlazorEccomerce.Server.Services.CategoryService;
 global using BlazorEccomerce.Server.Services.CartService;
 global using BlazorEccomerce.Server.Services.AuthService;
 global using BlazorEccomerce.Server.Services.OrderService;
+global using BlazorEccomerce.Server.Services.ProductTypeService;
 using Microsoft.AspNetCore.ResponseCompression;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,10 +29,16 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IProductTypeService, ProductTypeService>();
 
 var app = builder.Build();
 
-app.UseSwaggerUI();
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+	c.SwaggerEndpoint("/swagger/v1/swagger.json", "BlazorEcommerce API V1");
+	c.RoutePrefix = "swagger/index.html"; // Set Swagger UI at the app's root
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -44,8 +51,6 @@ else
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
-app.UseSwagger();
 
 app.UseHttpsRedirection();
 

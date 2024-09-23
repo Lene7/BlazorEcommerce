@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Pages\Admin\Categories.razor.css" />
+    <None Remove="Pages\Admin\ProductTypes.razor.css" />
+    <None Remove="Shared\AdminMenu.razor.css" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="6.0.32" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.31" />
@@ -23,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <_ContentIncludedByDefault Remove="Pages\Admin\ProductTypes.razor" />
     <_ContentIncludedByDefault Remove="Pages\Login.razor" />
     <_ContentIncludedByDefault Remove="Pages\Orders.razor" />
     <_ContentIncludedByDefault Remove="Pages\Register.razor" />
@@ -34,6 +41,16 @@
 
   <ItemGroup>
     <UpToDateCheckInput Remove="Pages\Orders.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Pages\Admin\Categories.razor.css" />
+    <Content Include="Pages\Admin\ProductTypes.razor.css" />
+    <Content Include="Shared\AdminMenu.razor.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Admin\ProductTypes.razor" />
   </ItemGroup>
 
 </Project>
