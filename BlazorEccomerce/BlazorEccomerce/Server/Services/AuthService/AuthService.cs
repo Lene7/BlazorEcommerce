@@ -3,7 +3,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace BlazorEccomerce.Server.Services.AuthService
 {
@@ -96,16 +95,14 @@ namespace BlazorEccomerce.Server.Services.AuthService
 			{
 				new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
 				new Claim(ClaimTypes.Name, user.Email),
-				new Claim(ClaimTypes.Role, user.Role  ?? "Customer")
+				new Claim(ClaimTypes.Role, user.Role),
 			};
 
-			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));
+			var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));
 
-			var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+			var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
 			var token = new JwtSecurityToken(
-				issuer: _configuration["AppSettings:JwtIssuer"],
-				audience: _configuration["AppSettings:JwtAudience"],
 				claims: claims,
 				expires: DateTime.Now.AddDays(1),
 				signingCredentials: creds );

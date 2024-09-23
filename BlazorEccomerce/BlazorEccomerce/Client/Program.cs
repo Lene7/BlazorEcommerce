@@ -6,7 +6,6 @@ global using BlazorEccomerce.Client.Services.CartService;
 global using BlazorEccomerce.Client.Services.AuthService;
 global using Microsoft.AspNetCore.Components.Authorization;
 global using BlazorEccomerce.Client.Services.OrderService;
-global using BlazorEccomerce.Client.Services.ProductTypeService;
 using BlazorEccomerce.Client;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -23,7 +22,6 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
-builder.Services.AddScoped<IProductTypeService, ProductTypeService>();
 
 builder.Services.AddOptions();
 builder.Services.AddAuthorizationCore();
