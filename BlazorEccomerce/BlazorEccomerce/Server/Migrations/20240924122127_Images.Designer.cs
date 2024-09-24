@@ -4,6 +4,7 @@ using BlazorEccomerce.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlazorEccomerce.Server.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240924122127_Images")]
+    partial class Images
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,7 +40,7 @@ namespace BlazorEccomerce.Server.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Carts", (string)null);
+                    b.ToTable("Carts");
                 });
 
             modelBuilder.Entity("BlazorEccomerce.Shared.CartItem", b =>
@@ -70,7 +72,7 @@ namespace BlazorEccomerce.Server.Migrations
 
                     b.HasIndex("ProductVariantId");
 
-                    b.ToTable("CartItems", (string)null);
+                    b.ToTable("CartItems");
                 });
 
             modelBuilder.Entity("BlazorEccomerce.Shared.Category", b =>
@@ -97,7 +99,7 @@ namespace BlazorEccomerce.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
 
                     b.HasData(
                         new
@@ -145,7 +147,7 @@ namespace BlazorEccomerce.Server.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("Images", (string)null);
+                    b.ToTable("Images");
                 });
 
             modelBuilder.Entity("BlazorEccomerce.Shared.Order", b =>
@@ -169,7 +171,7 @@ namespace BlazorEccomerce.Server.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("BlazorEccomerce.Shared.OrderItem", b =>
@@ -190,7 +192,7 @@ namespace BlazorEccomerce.Server.Migrations
 
                     b.HasIndex("ProductVariantId");
 
-                    b.ToTable("OrderItems", (string)null);
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("BlazorEccomerce.Shared.Product", b =>
@@ -229,7 +231,7 @@ namespace BlazorEccomerce.Server.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
 
                     b.HasData(
                         new
@@ -281,7 +283,7 @@ namespace BlazorEccomerce.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ProductTypes", (string)null);
+                    b.ToTable("ProductTypes");
 
                     b.HasData(
                         new
@@ -343,7 +345,7 @@ namespace BlazorEccomerce.Server.Migrations
 
                     b.HasIndex("ProductTypeId");
 
-                    b.ToTable("ProductVariants", (string)null);
+                    b.ToTable("ProductVariants");
 
                     b.HasData(
                         new
@@ -457,7 +459,7 @@ namespace BlazorEccomerce.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("BlazorEccomerce.Shared.Cart", b =>

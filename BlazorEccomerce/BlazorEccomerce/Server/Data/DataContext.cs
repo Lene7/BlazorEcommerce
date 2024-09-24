@@ -10,7 +10,10 @@
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			modelBuilder.Entity<ProductVariant>()
-				.HasKey(pv => pv.ProductVariantId);
+				//.HasKey(pv => pv.ProductVariantId)
+				.HasOne(pv => pv.Product)
+				.WithMany(p => p.Variants)
+				.HasForeignKey(pv => pv.ProductId);
 
 			modelBuilder.Entity<OrderItem>()
 				.HasKey(oi => new {oi.OrderId, oi.ProductVariantId });
@@ -168,5 +171,6 @@
 		public DbSet<CartItem> CartItems { get; set; }
 		public DbSet<Order> Orders { get; set; }
 		public DbSet<OrderItem> OrderItems { get; set; }
+		public DbSet<Image> Images { get; set; }
 	}
 }

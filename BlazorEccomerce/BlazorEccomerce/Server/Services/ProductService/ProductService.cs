@@ -16,7 +16,7 @@ namespace BlazorEccomerce.Server.Services.ProductService
 		{
 			foreach (var variant in product.Variants)
 			{
-				variant.ProductType = null;
+				variant.ProductId = 0;
 			}
 			_context.Products.Add(product);
 			await _context.SaveChangesAsync();
@@ -50,7 +50,7 @@ namespace BlazorEccomerce.Server.Services.ProductService
 					.Where(p => !p.Deleted)
 					.Include(p => p.Variants.Where(v => !v.Deleted))
 					.ThenInclude(v => v.ProductType)
-					//.Include(p => p.Images)
+					.Include(p => p.Images)
 					.ToListAsync()
 			};
 
@@ -60,7 +60,7 @@ namespace BlazorEccomerce.Server.Services.ProductService
 		public async Task<ServiceResponse<Product>> UpdateProduct(Product product)
 		{
 			var dbProduct = await _context.Products
-				//.Include(p => p.Images)
+				.Include(p => p.Images)
 				.FirstOrDefaultAsync(p => p.Id == product.Id);
 
 			if (dbProduct == null)
@@ -79,10 +79,10 @@ namespace BlazorEccomerce.Server.Services.ProductService
 			dbProduct.Visible = product.Visible;
 			dbProduct.Featured = product.Featured;
 
-			//var productImages = dbProduct.Images;
-			//_context.Images.RemoveRange(productImages);
+			var productImages = dbProduct.Images;
+			_context.Images.RemoveRange(productImages);
 
-			//dbProduct.Images = product.Images;
+			dbProduct.Images = product.Images;
 
 			foreach (var variant in product.Variants)
 			{
@@ -99,7 +99,7 @@ namespace BlazorEccomerce.Server.Services.ProductService
 					dbVariant.ProductTypeId = variant.ProductTypeId;
 					dbVariant.Price = variant.Price;
 					dbVariant.OriginalPrice = variant.OriginalPrice;
-					dbVariant.ProductVariantId = variant.ProductVariantId;
+					//dbVariant.ProductVariantId = variant.ProductVariantId;
 					dbVariant.Visible = variant.Visible;
 					dbVariant.Deleted = variant.Deleted;
 				}
@@ -116,6 +116,7 @@ namespace BlazorEccomerce.Server.Services.ProductService
 				Data = await _context.Products
 					.Where(p => p.Featured && p.Visible && !p.Deleted)
 					.Include(p => p.Variants.Where(v => v.Visible && !v.Deleted))
+					.Include(p => p.Images)
 					.ToListAsync()
 			};
 
@@ -132,6 +133,7 @@ namespace BlazorEccomerce.Server.Services.ProductService
 				product = await _context.Products
 					.Include(p => p.Variants.Where(v => !v.Deleted))
 					.ThenInclude(v => v.ProductType)
+					.Include(p => p.Images)
 					.FirstOrDefaultAsync(p => p.Id == productId && !p.Deleted);
 			}
 			else
@@ -139,6 +141,7 @@ namespace BlazorEccomerce.Server.Services.ProductService
 				product = await _context.Products
 					.Include(p => p.Variants.Where(v => v.Visible && !v.Deleted))
 					.ThenInclude(v => v.ProductType)
+					.Include(p => p.Images)
 					.FirstOrDefaultAsync(p => p.Id == productId && !p.Deleted && p.Visible);
 			}
 
@@ -161,6 +164,7 @@ namespace BlazorEccomerce.Server.Services.ProductService
 				Data = await _context.Products
 				.Where (p => p.Visible && !p.Deleted)
 				.Include(p => p.Variants.Where(v => v.Visible && !v.Deleted))
+				.Include(p => p.Images)
 				.ToListAsync()
 			};
 
@@ -174,6 +178,7 @@ namespace BlazorEccomerce.Server.Services.ProductService
 				Data = await _context.Products
 					.Where(p => p.Category.Url.ToLower().Equals(categoryUrl.ToLower()) && p.Visible && !p.Deleted)
 					.Include(p => p.Variants.Where(v => v.Visible && !v.Deleted))
+					.Include(p => p.Images)
 					.ToListAsync()
 			};
 
@@ -223,6 +228,7 @@ namespace BlazorEccomerce.Server.Services.ProductService
 									p.Description.ToLower().Contains(searchText.ToLower()) &&
 									p.Visible && !p.Deleted)
 								.Include(p => p.Variants)
+								.Include(p => p.Images)
 								.Skip((page - 1) * (int)pageResults)
 								.Take((int)pageResults)
 								.ToListAsync();
